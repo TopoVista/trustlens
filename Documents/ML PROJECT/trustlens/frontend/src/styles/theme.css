@@ -1,0 +1,39 @@
+:root {
+  /* Base colors */
+  --color-bg: #fafafa;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+
+  /* Trust states */
+  --trust-supported: #16a34a;     /* green */
+  --trust-unsupported: #eab308;   /* yellow */
+  --trust-contradicted: #dc2626;  /* red */
+
+  /* Trust backgrounds */
+  --trust-supported-bg: #dcfce7;
+  --trust-unsupported-bg: #fef9c3;
+  --trust-contradicted-bg: #fee2e2;
+
+  /* Layout */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Typography */
+  --font-main: Arial, sans-serif;
+}
+
+/* Typography scale */
+:root {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+
+  --line-tight: 1.25;
+  --line-normal: 1.6;
+}
+
