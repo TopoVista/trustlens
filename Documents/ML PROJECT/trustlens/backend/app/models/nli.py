@@ -1,4 +1,4 @@
-"""NLI model wrapper"""
+"""NLI model wrapper (lazy-loaded, memory-safe)"""
 
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -10,15 +10,20 @@ _tokenizer = None
 _model = None
 
 
-def _load_model():
+def _get_model():
     global _tokenizer, _model
 
-    if _tokenizer is None or _model is None:
-        print("⏳ Loading NLI model...")
+    if _model is None or _tokenizer is None:
+        print("⏳ Lazy-loading NLI model...")
+
         _tokenizer = AutoTokenizer.from_pretrained(_MODEL_NAME)
         _model = AutoModelForSequenceClassification.from_pretrained(_MODEL_NAME)
+
         _model.eval()
+
         print("✅ NLI model loaded.")
+
+    return _tokenizer, _model
 
 
 def verify_claim(claim: str, evidence: str) -> Tuple[str, float]:
@@ -29,9 +34,10 @@ def verify_claim(claim: str, evidence: str) -> Tuple[str, float]:
         (label, confidence)
         label ∈ {"entailment", "contradiction", "neutral"}
     """
-    _load_model()
 
-    inputs = _tokenizer(
+    tokenizer, model = _get_model()
+
+    inputs = tokenizer(
         evidence,
         claim,
         return_tensors="pt",
@@ -40,15 +46,11 @@ def verify_claim(claim: str, evidence: str) -> Tuple[str, float]:
     )
 
     with torch.no_grad():
-        outputs = _model(**inputs)
+        outputs = model(**inputs)
         logits = outputs.logits
         probs = torch.softmax(logits, dim=1)[0]
 
-    # Label mapping for MNLI models
     labels = ["contradiction", "neutral", "entailment"]
 
-    max_idx = torch.argmax(probs).item()
-    label = labels[max_idx]
-    confidence = probs[max_idx].item()
-
-    return label, confidence
+    idx = torch.argmax(probs).item()
+    return labels[idx], probs[idx].item()
