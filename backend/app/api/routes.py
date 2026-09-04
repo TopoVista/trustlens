@@ -1,6 +1,7 @@
 """FastAPI API routes for TrustLens"""
 import time
 import logging
+from typing import List
 from fastapi import APIRouter, HTTPException, status
 from app.api.schemas import (
     QueryRequest,
@@ -11,13 +12,26 @@ from app.api.schemas import (
     VendorAssessmentRequest,
     VendorAssessmentResponse,
     QARequest,
-    QAResponse
+    QAResponse,
+    WorkspaceCreate,
+    WorkspaceResponse,
+    DocumentUploadRequest,
+    DocumentResponse,
+    SemanticRuleRequest,
+    SemanticRuleResponse,
+    KnowledgeHealthResponse,
+    ProactiveDiscoveryResponse,
+    KnowledgeQueryRequest,
+    KnowledgeQueryResponse,
 )
 from app.pipeline.retriever import retrieve
 from app.pipeline.generator import generate_answer
 from app.pipeline.assembler import assemble_verified_answer
 from app.pipeline.runner import run_rag
 from app.evaluator.metrics import compute_summary_stats
+from app.knowledge.repository import KnowledgeRepository
+from app.specialists.ingestion_agent import IngestionKnowledgeAgent
+from app.planner.planner import AnalysisPlanner
 
 logger = logging.getLogger("trustlens.routes")
 router = APIRouter()
@@ -187,4 +201,115 @@ async def ask_vendor_question(request: QARequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Q&A inquiry failed: {str(e)}"
         )
+
+
+# --- Personal Knowledge Intelligence Endpoints ---
+
+_knowledge_repo = KnowledgeRepository()
+_ingestion_agent = IngestionKnowledgeAgent(_knowledge_repo)
+_planner = AnalysisPlanner(_knowledge_repo)
+
+
+@router.get("/api/workspaces", response_model=List[WorkspaceResponse])
+def list_workspaces():
+    """Returns list of user workspaces, creating default if none exists."""
+    _knowledge_repo.ensure_default_workspace()
+    return _knowledge_repo.list_workspaces()
+
+
+@router.post("/api/workspaces", response_model=WorkspaceResponse)
+def create_workspace(request: WorkspaceCreate):
+    """Creates a new isolated user knowledge workspace."""
+    return _knowledge_repo.create_workspace(request.name, request.description)
+
+
+@router.get("/api/workspaces/{workspace_id}/health", response_model=KnowledgeHealthResponse)
+def get_workspace_health(workspace_id: str):
+    """Calculates live knowledge health metrics for the workspace."""
+    return _knowledge_repo.get_knowledge_health(workspace_id)
+
+
+@router.get("/api/workspaces/{workspace_id}/discoveries", response_model=ProactiveDiscoveryResponse)
+def get_workspace_discoveries(workspace_id: str):
+    """Surfaces proactive 'Things You Should Know' discoveries."""
+    discoveries = _knowledge_repo.get_proactive_discoveries(workspace_id)
+    return {"discoveries": discoveries}
+
+
+@router.post("/api/workspaces/{workspace_id}/documents", response_model=DocumentResponse)
+async def upload_workspace_document(workspace_id: str, request: DocumentUploadRequest):
+    """
+    Ingests user documents/spreadsheets, extracting entities, claims, timeline events,
+    and profiling structured CSV tables.
+    """
+    result = await _ingestion_agent.ingest_content(
+        workspace_id=workspace_id,
+        title=request.title,
+        filename=request.filename or "document.txt",
+        raw_content=request.raw_content,
+        file_type=request.file_type or "text",
+        authority_level=request.authority_level or "MEDIUM"
+    )
+    return result
+
+
+@router.get("/api/workspaces/{workspace_id}/documents")
+def get_workspace_documents(workspace_id: str):
+    """Returns all ingested documents in the workspace."""
+    return _knowledge_repo.get_documents(workspace_id)
+
+
+@router.get("/api/workspaces/{workspace_id}/claims")
+def get_workspace_claims(workspace_id: str):
+    """Returns extracted claims with linked evidence."""
+    return _knowledge_repo.get_claims(workspace_id)
+
+
+@router.get("/api/workspaces/{workspace_id}/entities")
+def get_workspace_entities(workspace_id: str):
+    """Returns the Knowledge Graph nodes and edges for the workspace."""
+    return _knowledge_repo.get_knowledge_graph(workspace_id)
+
+
+@router.get("/api/workspaces/{workspace_id}/timeline")
+def get_workspace_timeline(workspace_id: str):
+    """Returns chronological timeline events."""
+    return _knowledge_repo.get_timeline(workspace_id)
+
+
+@router.get("/api/workspaces/{workspace_id}/rules", response_model=List[SemanticRuleResponse])
+def get_workspace_rules(workspace_id: str):
+    """Returns user-defined semantic memory rules."""
+    return _knowledge_repo.get_semantic_rules(workspace_id)
+
+
+@router.post("/api/workspaces/{workspace_id}/rules", response_model=SemanticRuleResponse)
+def add_workspace_rule(workspace_id: str, request: SemanticRuleRequest):
+    """Adds a user-defined semantic memory rule."""
+    rule_id = _knowledge_repo.add_semantic_rule(
+        workspace_id=workspace_id,
+        rule_type=request.rule_type,
+        rule_key=request.rule_key,
+        rule_value=request.rule_value
+    )
+    rules = _knowledge_repo.get_semantic_rules(workspace_id)
+    return next((r for r in rules if r["id"] == rule_id), None)
+
+
+@router.post("/api/workspaces/{workspace_id}/query", response_model=KnowledgeQueryResponse)
+async def query_workspace(workspace_id: str, request: KnowledgeQueryRequest):
+    """
+    Executes Intent-Aware Analysis Planner over user workspace knowledge.
+    Returns response complying with Phase 11 Answer Contract.
+    """
+    try:
+        response = await _planner.execute_plan(workspace_id, request.query)
+        return response
+    except Exception as e:
+        logger.error("Workspace query error: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Knowledge query failed: {str(e)}"
+        )
+
 

@@ -1,215 +1,309 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header.jsx';
-import Hero from './components/Hero.jsx';
-import VendorSelector from './components/VendorSelector.jsx';
-import WorkflowPipeline from './components/WorkflowPipeline.jsx';
-import LoadingWorkflow from './components/LoadingWorkflow.jsx';
-import VendorRiskCard from './components/VendorRiskCard.jsx';
-import ComplianceMatrix from './components/ComplianceMatrix.jsx';
-import AgentProvenanceDrawer from './components/AgentProvenanceDrawer.jsx';
-import InteractiveQABot from './components/InteractiveQABot.jsx';
-import ResultsPanel from './components/ResultsPanel.jsx';
+import KnowledgeHeader from './components/KnowledgeHeader.jsx';
+import QueryConsole from './components/QueryConsole.jsx';
+import SpecialistCanvas from './components/SpecialistCanvas.jsx';
+import AnswerContractPanel from './components/AnswerContractPanel.jsx';
+import HealthAuditDashboard from './components/HealthAuditDashboard.jsx';
+import KnowledgeGraphTimeline from './components/KnowledgeGraphTimeline.jsx';
+import SemanticRulesManager from './components/SemanticRulesManager.jsx';
+import IngestionModal from './components/IngestionModal.jsx';
 import ArchitectureModal from './components/ArchitectureModal.jsx';
 import Footer from './components/Footer.jsx';
-import { assessVendor, checkHealth } from './api.js';
-import { AlertCircle, Shield, Sparkles, CheckCircle2 } from 'lucide-react';
+import {
+  listWorkspaces,
+  createWorkspace,
+  getWorkspaceHealth,
+  getWorkspaceDiscoveries,
+  uploadDocument,
+  getWorkspaceEntities,
+  getWorkspaceTimeline,
+  getWorkspaceRules,
+  addWorkspaceRule,
+  queryKnowledge,
+  checkHealth
+} from './api.js';
+import { 
+  Sparkles, 
+  ShieldCheck, 
+  GitBranch, 
+  Sliders, 
+  AlertCircle, 
+  Layers, 
+  Activity,
+  Compass
+} from 'lucide-react';
 
 export default function App() {
-  const [selectedVendor, setSelectedVendor] = useState({ id: 'snowflake', name: 'Snowflake Data Cloud', domain: 'snowflake.com' });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isColdStarting, setIsColdStarting] = useState(false);
-  const [activeStage, setActiveStage] = useState('idle');
-  const [assessmentData, setAssessmentData] = useState(null);
-  const [error, setError] = useState(null);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [activeWorkspace, setActiveWorkspace] = useState(null);
+  const [healthData, setHealthData] = useState(null);
+  const [discoveries, setDiscoveries] = useState([]);
+  const [entitiesData, setEntitiesData] = useState(null);
+  const [timelineData, setTimelineData] = useState([]);
+  const [rules, setRules] = useState([]);
+
+  const [activeView, setActiveView] = useState('query'); // 'query' | 'health' | 'graph' | 'rules'
+  const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
   const [isHealthy, setIsHealthy] = useState(true);
-  const [activeTab, setActiveTab] = useState('assessment'); // 'assessment' | 'qa_claims'
 
-  // Check health on load
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [queryResult, setQueryResult] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  // Load initial workspaces & backend status
   useEffect(() => {
     checkHealth().then((ok) => setIsHealthy(ok));
+    loadWorkspaces();
   }, []);
 
-  const handleAssessVendor = async () => {
-    if (!selectedVendor || isLoading) return;
-
-    setError(null);
-    setIsLoading(true);
-    setAssessmentData(null);
-    setIsColdStarting(false);
-    setActiveStage('ingestion');
-
-    // Multi-agent stage simulation timer to animate UI pipeline
-    const stages = ['parsing', 'retrieval', 'compliance', 'scoring', 'report', 'qa_verifier'];
-    let stageIdx = 0;
-    const interval = setInterval(() => {
-      if (stageIdx < stages.length) {
-        setActiveStage(stages[stageIdx]);
-        stageIdx++;
-      }
-    }, 1200);
-
-    const coldStartTimer = setTimeout(() => {
-      setIsColdStarting(true);
-    }, 3000);
-
+  const loadWorkspaces = async () => {
     try {
-      const payload = {
-        vendor: selectedVendor,
-        query: `Comprehensive security and compliance audit for ${selectedVendor.name}`,
-        documents_text: selectedVendor.documents_text || ''
-      };
-
-      const data = await assessVendor(payload);
-      clearTimeout(coldStartTimer);
-      clearInterval(interval);
-      setActiveStage('qa_verifier');
-      setAssessmentData(data);
+      const list = await listWorkspaces();
+      setWorkspaces(list);
+      if (list.length > 0 && !activeWorkspace) {
+        setActiveWorkspace(list[0]);
+      }
     } catch (err) {
-      clearTimeout(coldStartTimer);
-      clearInterval(interval);
-      setActiveStage('idle');
-      console.error('Multi-Agent assessment error:', err);
-      setError(err.message || 'Unable to complete multi-agent assessment. Ensure backend is running.');
-    } finally {
-      setIsLoading(false);
-      setIsColdStarting(false);
+      console.error('Failed to load workspaces:', err);
     }
   };
 
-  // Convert multi-agent QA claims into format expected by ResultsPanel for deep-dive
-  const formattedResultsData = assessmentData ? {
-    query: `Security assessment for ${assessmentData.vendor_profile?.name}`,
-    answer: assessmentData.report_narrative,
-    documents: assessmentData.evidence_documents || [],
-    verified_claims: assessmentData.qa_verification?.verified_claims || [],
-    stats: {
-      claim_count: assessmentData.qa_verification?.verified_claims?.length || 0,
-      faithfulness: (assessmentData.qa_verification?.faithfulness || 100) / 100,
-      hallucination_rate: (assessmentData.qa_verification?.hallucination_rate || 0) / 100,
-      supported: assessmentData.qa_verification?.verified_claims?.filter(c => c.label === 'SUPPORTED').length || 0,
-      not_supported: assessmentData.qa_verification?.verified_claims?.filter(c => c.label === 'NOT_SUPPORTED').length || 0,
-      contradicted: assessmentData.qa_verification?.verified_claims?.filter(c => c.label === 'CONTRADICTED').length || 0,
-      total_ms: assessmentData.total_latency_ms
+  // When active workspace changes, reload all its context
+  useEffect(() => {
+    if (!activeWorkspace?.id) return;
+    refreshWorkspaceData(activeWorkspace.id);
+  }, [activeWorkspace?.id]);
+
+  const refreshWorkspaceData = async (wsId) => {
+    try {
+      const [h, d, e, t, r] = await Promise.all([
+        getWorkspaceHealth(wsId).catch(() => null),
+        getWorkspaceDiscoveries(wsId).catch(() => ({ discoveries: [] })),
+        getWorkspaceEntities(wsId).catch(() => null),
+        getWorkspaceTimeline(wsId).catch(() => []),
+        getWorkspaceRules(wsId).catch(() => []),
+      ]);
+
+      setHealthData(h);
+      setDiscoveries(d?.discoveries || []);
+      setEntitiesData(e);
+      setTimelineData(t || []);
+      setRules(r || []);
+    } catch (err) {
+      console.error('Error refreshing workspace data:', err);
     }
-  } : null;
+  };
+
+  const handleCreateWorkspace = async (name, description) => {
+    try {
+      const newWs = await createWorkspace(name, description);
+      setWorkspaces((prev) => [...prev, newWs]);
+      setActiveWorkspace(newWs);
+    } catch (err) {
+      console.error('Failed to create workspace:', err);
+    }
+  };
+
+  const handleIngestDocument = async (docData) => {
+    if (!activeWorkspace?.id) return;
+    const res = await uploadDocument(activeWorkspace.id, docData);
+    await refreshWorkspaceData(activeWorkspace.id);
+    return res;
+  };
+
+  const handleAddRule = async (ruleData) => {
+    if (!activeWorkspace?.id) return;
+    const res = await addWorkspaceRule(activeWorkspace.id, ruleData);
+    await refreshWorkspaceData(activeWorkspace.id);
+    return res;
+  };
+
+  const handleRunQuery = async (queryText) => {
+    if (!activeWorkspace?.id || isQuerying) return;
+
+    setErrorMessage(null);
+    setIsQuerying(true);
+
+    try {
+      const result = await queryKnowledge(activeWorkspace.id, queryText);
+      setQueryResult(result);
+      // Auto-switch to query view if elsewhere
+      setActiveView('query');
+    } catch (err) {
+      console.error('Knowledge query failed:', err);
+      setErrorMessage(err.message || 'Execution error during multi-agent analysis.');
+    } finally {
+      setIsQuerying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-trust-bg selection:bg-trust-accent/30 selection:text-white">
-      {/* 1. Navigation Header */}
-      <Header
-        onOpenArchitecture={() => setIsArchitectureOpen(true)}
+      {/* 1. Header with Workspace Management */}
+      <KnowledgeHeader
+        workspaces={workspaces}
+        activeWorkspace={activeWorkspace}
+        onSelectWorkspace={setActiveWorkspace}
+        onCreateWorkspace={handleCreateWorkspace}
+        onOpenIngest={() => setIsIngestOpen(true)}
+        healthData={healthData}
         isHealthy={isHealthy}
+        onRefresh={() => activeWorkspace && refreshWorkspaceData(activeWorkspace.id)}
       />
 
       <main className="flex-1 pb-16">
-        {/* 2. Hero Section */}
-        <Hero />
-
-        {/* 3. Vendor Assessment Selector */}
-        <VendorSelector
-          selectedVendor={selectedVendor}
-          onSelectVendor={setSelectedVendor}
-          onAssess={handleAssessVendor}
-          isLoading={isLoading}
-        />
-
-        {/* Error notification banner */}
-        {error && (
-          <div className="max-w-3xl mx-auto px-4 mb-6">
-            <div className="p-4 rounded-xl bg-trust-red-bg border border-trust-red/40 flex items-start space-x-3 text-trust-red text-xs sm:text-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        {/* Error Notification */}
+        {errorMessage && (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4">
+            <div className="p-3.5 rounded-xl bg-trust-red-bg border border-trust-red/40 text-xs text-trust-red flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold block">Multi-Agent Assessment Error</span>
-                <p className="text-trust-red/90 mt-0.5">{error}</p>
+                <span className="font-bold block">Analysis Error</span>
+                <span className="text-trust-red/90">{errorMessage}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* 4. Multi-Agent Autonomous Collaboration Canvas */}
-        <WorkflowPipeline
-          activeStage={activeStage}
-          isRunning={isLoading}
-          hasResult={Boolean(assessmentData)}
+        {/* 2. Hero & Query Console */}
+        <div className="pt-8 pb-4 text-center px-4 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-trust-accent/15 border border-trust-accent/30 text-trust-accent text-xs font-mono mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Intent-Aware Personal Knowledge Intelligence</span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Evidence-Grounded Intelligence Over Your Data
+          </h1>
+          <p className="text-xs sm:text-sm text-trust-muted mt-2 max-w-xl mx-auto">
+            Ingest personal reports, notes, and research. Decompose claims, detect cross-document contradictions,
+            and query with strict verifiable citation grounding.
+          </p>
+        </div>
+
+        {/* 3. Query Bar */}
+        <QueryConsole
+          onRunQuery={handleRunQuery}
+          isLoading={isQuerying}
+          activeWorkspace={activeWorkspace}
         />
 
-        {/* 5. Loading State */}
-        {isLoading && <LoadingWorkflow isColdStarting={isColdStarting} />}
+        {/* 4. Specialist Multi-Agent Canvas */}
+        <SpecialistCanvas
+          isExecuting={isQuerying}
+          activePlanTrace={queryResult?.plan_trace || []}
+          intent={queryResult?.intent}
+          latencyMs={queryResult?.latency_ms}
+        />
 
-        {/* 6. Multi-Agent Assessment Results Dashboard */}
-        {!isLoading && assessmentData && (
-          <div className="max-w-6xl mx-auto px-4">
-            {/* View Selector Tabs */}
-            <div className="flex items-center justify-between mb-6 pb-2 border-b border-trust-border/40">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveTab('assessment')}
-                  className={`text-xs font-mono px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    activeTab === 'assessment'
-                      ? 'bg-trust-accent text-white font-semibold shadow-md shadow-trust-accent/20'
-                      : 'bg-trust-surface/60 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Executive Risk & Compliance Matrix</span>
-                </button>
+        {/* 5. View Navigation Bar */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 my-6">
+          <div className="flex items-center justify-between border-b border-trust-border/60 pb-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveView('query')}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 ${
+                  activeView === 'query'
+                    ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
+                    : 'bg-trust-surface text-gray-400 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Grounded Q&A & Claims</span>
+              </button>
 
-                <button
-                  onClick={() => setActiveTab('qa_claims')}
-                  className={`text-xs font-mono px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                    activeTab === 'qa_claims'
-                      ? 'bg-trust-accent text-white font-semibold shadow-md shadow-trust-accent/20'
-                      : 'bg-trust-surface/60 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>QA NLI Claim Grounding Deep-Dive</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setActiveView('health')}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 ${
+                  activeView === 'health'
+                    ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
+                    : 'bg-trust-surface text-gray-400 hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Health & Blind Spot Audit</span>
+              </button>
 
-              <span className="text-[11px] font-mono text-gray-400">
-                Audited Vendor: <strong className="text-white">{assessmentData.vendor_profile?.name}</strong>
-              </span>
+              <button
+                onClick={() => setActiveView('graph')}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 ${
+                  activeView === 'graph'
+                    ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
+                    : 'bg-trust-surface text-gray-400 hover:text-white'
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                <span>Graph & Timeline Explorer</span>
+              </button>
+
+              <button
+                onClick={() => setActiveView('rules')}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 ${
+                  activeView === 'rules'
+                    ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
+                    : 'bg-trust-surface text-gray-400 hover:text-white'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Semantic Memory Rules</span>
+              </button>
             </div>
 
-            {activeTab === 'assessment' ? (
-              <>
-                {/* Executive Vendor Risk Card */}
-                <VendorRiskCard assessment={assessmentData} />
-
-                {/* Compliance Framework Matrix */}
-                <ComplianceMatrix
-                  complianceFindings={assessmentData.compliance_findings}
-                  complianceRate={assessmentData.compliance_rate}
-                />
-
-                {/* Agent Provenance & Execution Trace Drawer */}
-                <AgentProvenanceDrawer
-                  agentTraces={assessmentData.agent_traces}
-                  qaOverview={assessmentData.qa_verification}
-                  totalLatencyMs={assessmentData.total_latency_ms}
-                />
-
-                {/* Interactive User Q&A Bot */}
-                <InteractiveQABot vendorProfile={assessmentData.vendor_profile} />
-              </>
-            ) : (
-              /* QA Claim-Level Grounding Deep Dive */
-              <ResultsPanel data={formattedResultsData} />
-            )}
+            <button
+              onClick={() => setIsArchitectureOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-trust-muted hover:text-trust-accent transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Architecture Spec</span>
+            </button>
           </div>
+        </div>
+
+        {/* 6. Active View Container */}
+        {activeView === 'query' && (
+          <AnswerContractPanel data={queryResult} />
+        )}
+
+        {activeView === 'health' && (
+          <HealthAuditDashboard
+            healthData={healthData}
+            discoveries={discoveries}
+            activeWorkspace={activeWorkspace}
+          />
+        )}
+
+        {activeView === 'graph' && (
+          <KnowledgeGraphTimeline
+            entitiesData={entitiesData}
+            timelineData={timelineData}
+          />
+        )}
+
+        {activeView === 'rules' && (
+          <SemanticRulesManager
+            rules={rules}
+            onAddRule={handleAddRule}
+            activeWorkspace={activeWorkspace}
+          />
         )}
       </main>
 
-      {/* 7. Footer */}
-      <Footer />
+      {/* 7. Knowledge Ingestion Modal */}
+      <IngestionModal
+        isOpen={isIngestOpen}
+        onClose={() => setIsIngestOpen(false)}
+        onIngest={handleIngestDocument}
+        activeWorkspace={activeWorkspace}
+      />
 
-      {/* Architecture Explainer Modal */}
+      {/* 8. Architecture Spec Modal */}
       <ArchitectureModal
         isOpen={isArchitectureOpen}
         onClose={() => setIsArchitectureOpen(false)}
       />
+
+      {/* 9. Footer */}
+      <Footer />
     </div>
   );
 }
