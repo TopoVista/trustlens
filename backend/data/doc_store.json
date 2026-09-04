@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "doc_001",
+    "text": "attu battu chattu mattu is a good girl"
+  },
+  {
+    "id": "doc_002",
+    "text": "Query optimization — Performance tips Query optimization: Performance tips. Be careful about handling concurrent access that can be mitigated with sharding or replication. At its core, it means trading strong consistency for availability by creating appropriate indexes and statistics. It helps with scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_003",
+    "text": "Explain analyze — Historical context Explain analyze (Historical context). At its core, it means achieving low-latency reads and is often used in analytics pipelines. This focuses on reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_004",
+    "text": "Query rewriting — Best practices Query rewriting: Best practices. It helps with reducing disk I/O that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees that can be mitigated with sharding or replication. At its core, it means reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_005",
+    "text": "MVCC — Performance tips MVCC: Performance tips. It helps with scaling writes horizontally which can complicate migrations over time. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics. A typical example is preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_006",
+    "text": "Materialized query tables — Use case and example Materialized query tables — Use case and example. A common optimization is simplifying schema evolution that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads by creating appropriate indexes and statistics. It helps with trading strong consistency for availability and is often used in analytics pipelines. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_007",
+    "text": "Inverted indexes — Concept overview Inverted indexes: Concept overview. It contrasts with handling concurrent access and is often used in analytics pipelines. It helps with scaling writes horizontally using locks or MVCC depending on the engine. At its core, it means preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_008",
+    "text": "Federated queries — Trade-offs Federated queries: Trade-offs. A typical example is simplifying schema evolution by creating appropriate indexes and statistics. A common optimization is scaling writes horizontally and requires careful tuning of buffer pools. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_009",
+    "text": "Document stores — Best practices Document stores (Best practices). This focuses on handling concurrent access using locks or MVCC depending on the engine. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_010",
+    "text": "Constraints — Best practices Constraints: Best practices. A common optimization is reducing disk I/O and requires careful tuning of buffer pools. Be careful about scaling writes horizontally and requires careful tuning of buffer pools. A typical example is reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_011",
+    "text": "Relational model — Implementation notes Relational model — Implementation notes. It contrasts with simplifying schema evolution that can be mitigated with sharding or replication. This focuses on scaling writes horizontally and requires careful tuning of buffer pools. Be careful about achieving low-latency reads by creating appropriate indexes and statistics. A typical example is simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_012",
+    "text": "Garbage collection in DBs — Concept overview Garbage collection in DBs — Concept overview. A typical example is improving throughput in analytics workloads using locks or MVCC depending on the engine. This focuses on preserving transactional guarantees and is often used in analytics pipelines. At its core, it means handling concurrent access by creating appropriate indexes and statistics. Be careful about reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_013",
+    "text": "LRU and CLOCK algorithms — Use case and example LRU and CLOCK algorithms — Use case and example. It contrasts with simplifying schema evolution by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads that can be mitigated with sharding or replication. At its core, it means scaling writes horizontally that can be mitigated with sharding or replication. It contrasts with trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_014",
+    "text": "Versioned rows — Performance tips Versioned rows — Performance tips. A typical example is trading strong consistency for availability and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees which can complicate migrations over time. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine. At its core, it means achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_015",
+    "text": "Compression — Concept overview Compression — Concept overview. Be careful about achieving low-latency reads that can be mitigated with sharding or replication. At its core, it means handling concurrent access using locks or MVCC depending on the engine. A common optimization is handling concurrent access by creating appropriate indexes and statistics. This focuses on handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_016",
+    "text": "Concurrency control — Best practices Concurrency control: Best practices. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics. Be careful about simplifying schema evolution and requires careful tuning of buffer pools. Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_017",
+    "text": "Consensus (Paxos/Raft) — Use case and example Consensus (Paxos/Raft): Use case and example. A common optimization is trading strong consistency for availability and is often used in analytics pipelines. It helps with trading strong consistency for availability which can complicate migrations over time. It contrasts with handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_018",
+    "text": "Streaming ingestion — Historical context Streaming ingestion: Historical context. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics. Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics. It helps with simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_019",
+    "text": "Cardinality estimation — Best practices Cardinality estimation: Best practices. This focuses on handling concurrent access using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads by creating appropriate indexes and statistics. It helps with improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_020",
+    "text": "CAP theorem — Comparison with alternatives CAP theorem: Comparison with alternatives. It helps with scaling writes horizontally which can complicate migrations over time. A typical example is trading strong consistency for availability and requires careful tuning of buffer pools. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_021",
+    "text": "Transactions — Short tutorial Transactions — Short tutorial. Be careful about handling concurrent access and requires careful tuning of buffer pools. A typical example is handling concurrent access using locks or MVCC depending on the engine. Be careful about improving throughput in analytics workloads that can be mitigated with sharding or replication. It contrasts with simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_022",
+    "text": "Compaction — Use case and example Compaction: Use case and example. This focuses on reducing disk I/O and requires careful tuning of buffer pools. It contrasts with achieving low-latency reads which can complicate migrations over time. This focuses on achieving low-latency reads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_023",
+    "text": "MVCC — Comparison with alternatives MVCC — Comparison with alternatives. Be careful about preserving transactional guarantees and is often used in analytics pipelines. At its core, it means preserving transactional guarantees by creating appropriate indexes and statistics. A typical example is trading strong consistency for availability by creating appropriate indexes and statistics. A common optimization is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_024",
+    "text": "Full-text search — Use case and example Full-text search: Use case and example. It helps with reducing disk I/O using locks or MVCC depending on the engine. Be careful about achieving low-latency reads that can be mitigated with sharding or replication. A typical example is simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_025",
+    "text": "Point-in-time recovery — Common pitfalls Point-in-time recovery (Common pitfalls). It contrasts with scaling writes horizontally that can be mitigated with sharding or replication. It contrasts with handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_026",
+    "text": "Denormalization — Use case and example Denormalization — Use case and example. Be careful about simplifying schema evolution and is often used in analytics pipelines. A typical example is achieving low-latency reads and requires careful tuning of buffer pools. A typical example is achieving low-latency reads and requires careful tuning of buffer pools. A common optimization is scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_027",
+    "text": "LRU and CLOCK algorithms — Implementation notes LRU and CLOCK algorithms: Implementation notes. This focuses on trading strong consistency for availability and is often used in analytics pipelines. This focuses on handling concurrent access and is often used in analytics pipelines. It contrasts with simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_028",
+    "text": "Cardinality estimation — Best practices Cardinality estimation — Best practices. It helps with handling concurrent access using locks or MVCC depending on the engine. This focuses on simplifying schema evolution that can be mitigated with sharding or replication. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication. Be careful about simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_029",
+    "text": "NoSQL overview — Concept overview NoSQL overview (Concept overview). A typical example is handling concurrent access and is often used in analytics pipelines. At its core, it means achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_030",
+    "text": "Column-family stores — Performance tips Column-family stores: Performance tips. It contrasts with simplifying schema evolution which can complicate migrations over time. This focuses on simplifying schema evolution and requires careful tuning of buffer pools. A typical example is trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_031",
+    "text": "Graph databases — Use case and example Graph databases (Use case and example). It contrasts with handling concurrent access which can complicate migrations over time. At its core, it means achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_032",
+    "text": "Consensus (Paxos/Raft) — Comparison with alternatives Consensus (Paxos/Raft) (Comparison with alternatives). A typical example is reducing disk I/O and is often used in analytics pipelines. A typical example is trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_033",
+    "text": "Foreign data wrappers — Implementation notes Foreign data wrappers: Implementation notes. This focuses on trading strong consistency for availability and is often used in analytics pipelines. A common optimization is preserving transactional guarantees which can complicate migrations over time. Be careful about reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_034",
+    "text": "B-tree indexes — Comparison with alternatives B-tree indexes: Comparison with alternatives. Be careful about achieving low-latency reads and is often used in analytics pipelines. It helps with reducing disk I/O and requires careful tuning of buffer pools. A typical example is preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_035",
+    "text": "Log-structured merge trees (LSM) — Best practices Log-structured merge trees (LSM) (Best practices). A common optimization is trading strong consistency for availability and is often used in analytics pipelines. It helps with scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_036",
+    "text": "Distributed transactions — Short tutorial Distributed transactions — Short tutorial. A typical example is trading strong consistency for availability that can be mitigated with sharding or replication. It contrasts with handling concurrent access and is often used in analytics pipelines. A typical example is achieving low-latency reads which can complicate migrations over time. It contrasts with preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_037",
+    "text": "Cardinality estimation — Trade-offs Cardinality estimation — Trade-offs. At its core, it means improving throughput in analytics workloads and requires careful tuning of buffer pools. At its core, it means reducing disk I/O and is often used in analytics pipelines. Be careful about preserving transactional guarantees using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_038",
+    "text": "RocksDB/LevelDB internals — Performance tips RocksDB/LevelDB internals: Performance tips. At its core, it means handling concurrent access using locks or MVCC depending on the engine. At its core, it means improving throughput in analytics workloads that can be mitigated with sharding or replication. It contrasts with reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_039",
+    "text": "Columnar compression codecs — Comparison with alternatives Columnar compression codecs (Comparison with alternatives). It helps with achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_040",
+    "text": "Event sourcing — Performance tips Event sourcing: Performance tips. It helps with simplifying schema evolution which can complicate migrations over time. A common optimization is preserving transactional guarantees which can complicate migrations over time. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_041",
+    "text": "Buffer pool — Trade-offs Buffer pool (Trade-offs). It contrasts with achieving low-latency reads and requires careful tuning of buffer pools. A typical example is improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_042",
+    "text": "Write-ahead log (WAL) — Historical context Write-ahead log (WAL) (Historical context). Be careful about reducing disk I/O by creating appropriate indexes and statistics. At its core, it means achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_043",
+    "text": "Kafka integration — Historical context Kafka integration — Historical context. It helps with trading strong consistency for availability using locks or MVCC depending on the engine. At its core, it means trading strong consistency for availability which can complicate migrations over time. It contrasts with handling concurrent access that can be mitigated with sharding or replication. It helps with improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_044",
+    "text": "ER diagrams — Implementation notes ER diagrams (Implementation notes). It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_045",
+    "text": "Compression — Comparison with alternatives Compression — Comparison with alternatives. At its core, it means improving throughput in analytics workloads by creating appropriate indexes and statistics. Be careful about handling concurrent access which can complicate migrations over time. Be careful about handling concurrent access using locks or MVCC depending on the engine. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_046",
+    "text": "Bloom filters — Common pitfalls Bloom filters: Common pitfalls. A typical example is trading strong consistency for availability and is often used in analytics pipelines. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines. A typical example is trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_047",
+    "text": "MVCC — Trade-offs MVCC: Trade-offs. A common optimization is handling concurrent access and is often used in analytics pipelines. At its core, it means reducing disk I/O and requires careful tuning of buffer pools. This focuses on handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_048",
+    "text": "Column-family stores — Performance tips Column-family stores: Performance tips. It helps with reducing disk I/O that can be mitigated with sharding or replication. At its core, it means improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_049",
+    "text": "RocksDB/LevelDB internals — Use case and example RocksDB/LevelDB internals — Use case and example. This focuses on scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability which can complicate migrations over time. A common optimization is achieving low-latency reads using locks or MVCC depending on the engine. Be careful about achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_050",
+    "text": "Columnar compression codecs — Implementation notes Columnar compression codecs — Implementation notes. Be careful about reducing disk I/O that can be mitigated with sharding or replication. It contrasts with handling concurrent access and is often used in analytics pipelines. Be careful about trading strong consistency for availability and requires careful tuning of buffer pools. A typical example is reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_051",
+    "text": "Federated queries — Historical context Federated queries: Historical context. It contrasts with trading strong consistency for availability which can complicate migrations over time. This focuses on trading strong consistency for availability and is often used in analytics pipelines. A common optimization is improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_052",
+    "text": "Durability vs performance — Implementation notes Durability vs performance — Implementation notes. It contrasts with improving throughput in analytics workloads which can complicate migrations over time. It helps with scaling writes horizontally and is often used in analytics pipelines. It contrasts with achieving low-latency reads using locks or MVCC depending on the engine. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_053",
+    "text": "Bloom filters — Short tutorial Bloom filters — Short tutorial. A common optimization is trading strong consistency for availability and is often used in analytics pipelines. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means improving throughput in analytics workloads by creating appropriate indexes and statistics. A typical example is scaling writes horizontally and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_054",
+    "text": "Checkpoints — Short tutorial Checkpoints — Short tutorial. A typical example is handling concurrent access that can be mitigated with sharding or replication. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. A common optimization is trading strong consistency for availability which can complicate migrations over time. Be careful about achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_055",
+    "text": "Buffer pool — Trade-offs Buffer pool (Trade-offs). It contrasts with handling concurrent access using locks or MVCC depending on the engine. A typical example is achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_056",
+    "text": "Time-series databases — Best practices Time-series databases (Best practices). It helps with preserving transactional guarantees and is often used in analytics pipelines. A common optimization is improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_057",
+    "text": "OLTP vs OLAP — Best practices OLTP vs OLAP — Best practices. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads and is often used in analytics pipelines. A common optimization is scaling writes horizontally using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_058",
+    "text": "Materialized views — Historical context Materialized views: Historical context. A typical example is handling concurrent access and requires careful tuning of buffer pools. Be careful about simplifying schema evolution and is often used in analytics pipelines. This focuses on handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_059",
+    "text": "LRU and CLOCK algorithms — Use case and example LRU and CLOCK algorithms: Use case and example. Be careful about scaling writes horizontally which can complicate migrations over time. It helps with improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_060",
+    "text": "Isolation levels — Comparison with alternatives Isolation levels (Comparison with alternatives). This focuses on handling concurrent access by creating appropriate indexes and statistics. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_061",
+    "text": "Connection pooling — Short tutorial Connection pooling: Short tutorial. It contrasts with trading strong consistency for availability which can complicate migrations over time. It helps with scaling writes horizontally that can be mitigated with sharding or replication. It helps with scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_062",
+    "text": "Joins — Performance tips Joins — Performance tips. At its core, it means scaling writes horizontally and requires careful tuning of buffer pools. This focuses on simplifying schema evolution by creating appropriate indexes and statistics. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. This focuses on trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_063",
+    "text": "Adaptive indexing — Short tutorial Adaptive indexing (Short tutorial). A typical example is handling concurrent access by creating appropriate indexes and statistics. A typical example is scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_064",
+    "text": "ACID in distributed systems — Short tutorial ACID in distributed systems — Short tutorial. It contrasts with achieving low-latency reads which can complicate migrations over time. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. At its core, it means scaling writes horizontally by creating appropriate indexes and statistics. This focuses on handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_065",
+    "text": "RocksDB/LevelDB internals — Short tutorial RocksDB/LevelDB internals — Short tutorial. It contrasts with scaling writes horizontally which can complicate migrations over time. This focuses on improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is trading strong consistency for availability and is often used in analytics pipelines. Be careful about improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_066",
+    "text": "MVCC — Short tutorial MVCC: Short tutorial. It helps with preserving transactional guarantees that can be mitigated with sharding or replication. A typical example is handling concurrent access using locks or MVCC depending on the engine. At its core, it means handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_067",
+    "text": "B-tree indexes — Common pitfalls B-tree indexes (Common pitfalls). Be careful about improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_068",
+    "text": "Columnar storage — Historical context Columnar storage — Historical context. This focuses on simplifying schema evolution and is often used in analytics pipelines. It helps with improving throughput in analytics workloads and is often used in analytics pipelines. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_069",
+    "text": "Full-text search — Implementation notes Full-text search (Implementation notes). This focuses on trading strong consistency for availability that can be mitigated with sharding or replication. It contrasts with handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_070",
+    "text": "Data warehouses — Short tutorial Data warehouses (Short tutorial). A common optimization is improving throughput in analytics workloads using locks or MVCC depending on the engine. At its core, it means scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_071",
+    "text": "BASE model — Short tutorial BASE model: Short tutorial. A common optimization is simplifying schema evolution and is often used in analytics pipelines. Be careful about handling concurrent access that can be mitigated with sharding or replication. It helps with reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_072",
+    "text": "OLTP vs OLAP — Common pitfalls OLTP vs OLAP (Common pitfalls). A common optimization is scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_073",
+    "text": "Key-value stores — Comparison with alternatives Key-value stores: Comparison with alternatives. Be careful about simplifying schema evolution using locks or MVCC depending on the engine. A typical example is trading strong consistency for availability and is often used in analytics pipelines. It contrasts with scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_074",
+    "text": "Foreign data wrappers — Trade-offs Foreign data wrappers: Trade-offs. It helps with improving throughput in analytics workloads and is often used in analytics pipelines. A typical example is trading strong consistency for availability which can complicate migrations over time. A typical example is achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_075",
+    "text": "Kafka integration — Concept overview Kafka integration (Concept overview). A common optimization is improving throughput in analytics workloads and requires careful tuning of buffer pools. It contrasts with trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_076",
+    "text": "Serverless databases — Historical context Serverless databases: Historical context. It contrasts with improving throughput in analytics workloads using locks or MVCC depending on the engine. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine. A common optimization is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_077",
+    "text": "Buffer pool — Implementation notes Buffer pool (Implementation notes). Be careful about trading strong consistency for availability and requires careful tuning of buffer pools. This focuses on preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_078",
+    "text": "Indexing — Short tutorial Indexing: Short tutorial. At its core, it means scaling writes horizontally by creating appropriate indexes and statistics. A common optimization is reducing disk I/O which can complicate migrations over time. This focuses on reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_079",
+    "text": "B-tree indexes — Historical context B-tree indexes: Historical context. A typical example is preserving transactional guarantees and is often used in analytics pipelines. It helps with simplifying schema evolution by creating appropriate indexes and statistics. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_080",
+    "text": "Distributed transactions — Use case and example Distributed transactions — Use case and example. It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads which can complicate migrations over time. Be careful about simplifying schema evolution by creating appropriate indexes and statistics. It helps with scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_081",
+    "text": "Constraints — Concept overview Constraints (Concept overview). A typical example is simplifying schema evolution using locks or MVCC depending on the engine. It helps with preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_082",
+    "text": "Sharding — Comparison with alternatives Sharding (Comparison with alternatives). This focuses on achieving low-latency reads which can complicate migrations over time. Be careful about preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_083",
+    "text": "Normalization — Short tutorial Normalization — Short tutorial. It contrasts with handling concurrent access that can be mitigated with sharding or replication. A common optimization is improving throughput in analytics workloads and is often used in analytics pipelines. It contrasts with achieving low-latency reads that can be mitigated with sharding or replication. It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_084",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Performance tips Hybrid transactional/analytical processing (HTAP) — Performance tips. A typical example is simplifying schema evolution and requires careful tuning of buffer pools. This focuses on handling concurrent access and is often used in analytics pipelines. It contrasts with improving throughput in analytics workloads using locks or MVCC depending on the engine. Be careful about preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_085",
+    "text": "NoSQL overview — Use case and example NoSQL overview (Use case and example). A typical example is trading strong consistency for availability by creating appropriate indexes and statistics. At its core, it means simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_086",
+    "text": "Compression — Use case and example Compression (Use case and example). This focuses on simplifying schema evolution by creating appropriate indexes and statistics. It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_087",
+    "text": "OLTP vs OLAP — Trade-offs OLTP vs OLAP (Trade-offs). A common optimization is scaling writes horizontally that can be mitigated with sharding or replication. It helps with preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_088",
+    "text": "Strong consistency — Use case and example Strong consistency — Use case and example. It contrasts with improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is trading strong consistency for availability using locks or MVCC depending on the engine. At its core, it means handling concurrent access using locks or MVCC depending on the engine. A typical example is improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_089",
+    "text": "Joins — Performance tips Joins — Performance tips. At its core, it means trading strong consistency for availability which can complicate migrations over time. A typical example is trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is simplifying schema evolution which can complicate migrations over time. A common optimization is reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_090",
+    "text": "Parameterized queries — Comparison with alternatives Parameterized queries (Comparison with alternatives). This focuses on preserving transactional guarantees by creating appropriate indexes and statistics. It helps with improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_091",
+    "text": "Federated queries — Historical context Federated queries: Historical context. It helps with scaling writes horizontally by creating appropriate indexes and statistics. This focuses on improving throughput in analytics workloads using locks or MVCC depending on the engine. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_092",
+    "text": "Columnar storage — Performance tips Columnar storage: Performance tips. It contrasts with achieving low-latency reads using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads that can be mitigated with sharding or replication. At its core, it means achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_093",
+    "text": "Relational model — Implementation notes Relational model: Implementation notes. At its core, it means scaling writes horizontally by creating appropriate indexes and statistics. This focuses on handling concurrent access by creating appropriate indexes and statistics. This focuses on preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_094",
+    "text": "Distributed transactions — Implementation notes Distributed transactions: Implementation notes. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on reducing disk I/O which can complicate migrations over time. It helps with preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_095",
+    "text": "Write amplification — Performance tips Write amplification — Performance tips. This focuses on scaling writes horizontally which can complicate migrations over time. A common optimization is handling concurrent access using locks or MVCC depending on the engine. It helps with trading strong consistency for availability which can complicate migrations over time. A common optimization is reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_096",
+    "text": "Encryption at rest — Trade-offs Encryption at rest: Trade-offs. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. A typical example is preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_097",
+    "text": "Write amplification — Short tutorial Write amplification (Short tutorial). This focuses on reducing disk I/O and requires careful tuning of buffer pools. A common optimization is achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_098",
+    "text": "Query planner — Use case and example Query planner (Use case and example). It helps with preserving transactional guarantees and requires careful tuning of buffer pools. A typical example is preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_099",
+    "text": "Statistics and histograms — Use case and example Statistics and histograms — Use case and example. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics. Be careful about handling concurrent access that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees and requires careful tuning of buffer pools. This focuses on trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_100",
+    "text": "JSON data types — Comparison with alternatives JSON data types — Comparison with alternatives. This focuses on scaling writes horizontally that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees using locks or MVCC depending on the engine. Be careful about achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_101",
+    "text": "Foreign keys — Historical context Foreign keys — Historical context. A typical example is reducing disk I/O and is often used in analytics pipelines. Be careful about achieving low-latency reads which can complicate migrations over time. It contrasts with handling concurrent access that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_102",
+    "text": "Two-phase commit — Implementation notes Two-phase commit — Implementation notes. It contrasts with scaling writes horizontally and is often used in analytics pipelines. A typical example is handling concurrent access by creating appropriate indexes and statistics. It contrasts with simplifying schema evolution that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_103",
+    "text": "Key-value stores — Concept overview Key-value stores: Concept overview. A common optimization is achieving low-latency reads which can complicate migrations over time. It helps with improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_104",
+    "text": "Connection pooling — Use case and example Connection pooling: Use case and example. At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. This focuses on reducing disk I/O and is often used in analytics pipelines. It helps with trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_105",
+    "text": "Write-ahead log (WAL) — Performance tips Write-ahead log (WAL) — Performance tips. This focuses on preserving transactional guarantees which can complicate migrations over time. This focuses on scaling writes horizontally and requires careful tuning of buffer pools. A common optimization is improving throughput in analytics workloads that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_106",
+    "text": "Strong consistency — Comparison with alternatives Strong consistency — Comparison with alternatives. This focuses on handling concurrent access by creating appropriate indexes and statistics. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. It contrasts with scaling writes horizontally and is often used in analytics pipelines. A typical example is reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_107",
+    "text": "Page size and layout — Comparison with alternatives Page size and layout: Comparison with alternatives. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_108",
+    "text": "ACID properties — Trade-offs ACID properties: Trade-offs. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication. It helps with trading strong consistency for availability and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_109",
+    "text": "Inverted indexes — Common pitfalls Inverted indexes — Common pitfalls. It helps with preserving transactional guarantees using locks or MVCC depending on the engine. It helps with reducing disk I/O by creating appropriate indexes and statistics. It helps with trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_110",
+    "text": "Compression — Performance tips Compression (Performance tips). It contrasts with simplifying schema evolution using locks or MVCC depending on the engine. Be careful about reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_111",
+    "text": "Foreign keys — Common pitfalls Foreign keys (Common pitfalls). At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. At its core, it means reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_112",
+    "text": "Schema migrations — Short tutorial Schema migrations (Short tutorial). It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics. It helps with reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_113",
+    "text": "Write amplification — Use case and example Write amplification (Use case and example). It helps with improving throughput in analytics workloads using locks or MVCC depending on the engine. This focuses on preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_114",
+    "text": "Foreign data wrappers — Best practices Foreign data wrappers — Best practices. This focuses on improving throughput in analytics workloads that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads and is often used in analytics pipelines. Be careful about improving throughput in analytics workloads that can be mitigated with sharding or replication. At its core, it means handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_115",
+    "text": "Foreign keys — Historical context Foreign keys — Historical context. This focuses on simplifying schema evolution using locks or MVCC depending on the engine. At its core, it means improving throughput in analytics workloads which can complicate migrations over time. Be careful about simplifying schema evolution and is often used in analytics pipelines. A typical example is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_116",
+    "text": "Kafka integration — Historical context Kafka integration — Historical context. Be careful about handling concurrent access and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees using locks or MVCC depending on the engine. A typical example is reducing disk I/O that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_117",
+    "text": "Constraints — Short tutorial Constraints: Short tutorial. A typical example is reducing disk I/O that can be mitigated with sharding or replication. A common optimization is simplifying schema evolution and is often used in analytics pipelines. A typical example is trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_118",
+    "text": "Event sourcing — Comparison with alternatives Event sourcing — Comparison with alternatives. It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics. A common optimization is reducing disk I/O and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_119",
+    "text": "RocksDB/LevelDB internals — Common pitfalls RocksDB/LevelDB internals: Common pitfalls. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics. At its core, it means simplifying schema evolution by creating appropriate indexes and statistics. This focuses on scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_120",
+    "text": "Compression — Short tutorial Compression: Short tutorial. Be careful about trading strong consistency for availability by creating appropriate indexes and statistics. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools. It contrasts with simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_121",
+    "text": "Data warehouses — Performance tips Data warehouses (Performance tips). Be careful about scaling writes horizontally and requires careful tuning of buffer pools. It contrasts with improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_122",
+    "text": "Star schema — Short tutorial Star schema (Short tutorial). It helps with scaling writes horizontally which can complicate migrations over time. Be careful about trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_123",
+    "text": "Federated queries — Trade-offs Federated queries (Trade-offs). Be careful about reducing disk I/O and requires careful tuning of buffer pools. It contrasts with reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_124",
+    "text": "Query optimization — Performance tips Query optimization (Performance tips). A typical example is handling concurrent access which can complicate migrations over time. This focuses on trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_125",
+    "text": "BASE model — Historical context BASE model: Historical context. It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics. At its core, it means handling concurrent access and is often used in analytics pipelines. It contrasts with improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_126",
+    "text": "Buffer pool — Trade-offs Buffer pool — Trade-offs. This focuses on reducing disk I/O using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. Be careful about trading strong consistency for availability using locks or MVCC depending on the engine. It contrasts with scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_127",
+    "text": "Log-structured merge trees (LSM) — Use case and example Log-structured merge trees (LSM): Use case and example. At its core, it means trading strong consistency for availability and requires careful tuning of buffer pools. It contrasts with improving throughput in analytics workloads using locks or MVCC depending on the engine. This focuses on improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_128",
+    "text": "Compaction — Short tutorial Compaction: Short tutorial. A common optimization is simplifying schema evolution and is often used in analytics pipelines. It helps with handling concurrent access that can be mitigated with sharding or replication. A typical example is achieving low-latency reads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_129",
+    "text": "JSON data types — Use case and example JSON data types — Use case and example. A typical example is reducing disk I/O that can be mitigated with sharding or replication. Be careful about handling concurrent access which can complicate migrations over time. It contrasts with improving throughput in analytics workloads using locks or MVCC depending on the engine. A common optimization is trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_130",
+    "text": "Constraints — Concept overview Constraints (Concept overview). It contrasts with reducing disk I/O and is often used in analytics pipelines. At its core, it means reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_131",
+    "text": "Compression — Common pitfalls Compression — Common pitfalls. It helps with improving throughput in analytics workloads and requires careful tuning of buffer pools. At its core, it means simplifying schema evolution using locks or MVCC depending on the engine. A common optimization is improving throughput in analytics workloads using locks or MVCC depending on the engine. A typical example is achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_132",
+    "text": "Sharding — Concept overview Sharding (Concept overview). A typical example is trading strong consistency for availability that can be mitigated with sharding or replication. It helps with scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_133",
+    "text": "Columnar storage — Implementation notes Columnar storage: Implementation notes. It contrasts with preserving transactional guarantees which can complicate migrations over time. It helps with improving throughput in analytics workloads which can complicate migrations over time. A typical example is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_134",
+    "text": "Durability vs performance — Implementation notes Durability vs performance: Implementation notes. A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine. It helps with simplifying schema evolution that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_135",
+    "text": "Snapshot isolation — Implementation notes Snapshot isolation (Implementation notes). Be careful about trading strong consistency for availability by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_136",
+    "text": "Statistics and histograms — Implementation notes Statistics and histograms — Implementation notes. It contrasts with handling concurrent access using locks or MVCC depending on the engine. A common optimization is trading strong consistency for availability and is often used in analytics pipelines. Be careful about simplifying schema evolution using locks or MVCC depending on the engine. At its core, it means improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_137",
+    "text": "NoSQL overview — Use case and example NoSQL overview: Use case and example. It contrasts with preserving transactional guarantees and is often used in analytics pipelines. It helps with handling concurrent access that can be mitigated with sharding or replication. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_138",
+    "text": "Online schema change — Common pitfalls Online schema change — Common pitfalls. A typical example is trading strong consistency for availability and is often used in analytics pipelines. A common optimization is scaling writes horizontally by creating appropriate indexes and statistics. This focuses on handling concurrent access and requires careful tuning of buffer pools. At its core, it means improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_139",
+    "text": "ETL pipelines — Best practices ETL pipelines: Best practices. A typical example is scaling writes horizontally and requires careful tuning of buffer pools. It helps with achieving low-latency reads that can be mitigated with sharding or replication. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_140",
+    "text": "Cost-based optimization — Common pitfalls Cost-based optimization — Common pitfalls. It helps with reducing disk I/O and requires careful tuning of buffer pools. It contrasts with preserving transactional guarantees and requires careful tuning of buffer pools. A typical example is reducing disk I/O that can be mitigated with sharding or replication. Be careful about scaling writes horizontally and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_141",
+    "text": "Graph databases — Common pitfalls Graph databases (Common pitfalls). Be careful about achieving low-latency reads using locks or MVCC depending on the engine. At its core, it means simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_142",
+    "text": "Time-series databases — Common pitfalls Time-series databases — Common pitfalls. This focuses on reducing disk I/O and is often used in analytics pipelines. It helps with improving throughput in analytics workloads that can be mitigated with sharding or replication. It helps with trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_143",
+    "text": "Federated queries — Use case and example Federated queries (Use case and example). It helps with preserving transactional guarantees by creating appropriate indexes and statistics. It contrasts with simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_144",
+    "text": "CAP theorem — Common pitfalls CAP theorem (Common pitfalls). A common optimization is achieving low-latency reads and is often used in analytics pipelines. Be careful about scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_145",
+    "text": "ACID in distributed systems — Implementation notes ACID in distributed systems — Implementation notes. Be careful about reducing disk I/O that can be mitigated with sharding or replication. A common optimization is simplifying schema evolution that can be mitigated with sharding or replication. Be careful about simplifying schema evolution by creating appropriate indexes and statistics. A common optimization is preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_146",
+    "text": "B-tree indexes — Concept overview B-tree indexes: Concept overview. This focuses on scaling writes horizontally and requires careful tuning of buffer pools. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_147",
+    "text": "Log-structured merge trees (LSM) — Trade-offs Log-structured merge trees (LSM): Trade-offs. It contrasts with trading strong consistency for availability and is often used in analytics pipelines. It helps with reducing disk I/O and requires careful tuning of buffer pools. This focuses on simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_148",
+    "text": "Replication — Historical context Replication — Historical context. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools. A typical example is preserving transactional guarantees which can complicate migrations over time. At its core, it means preserving transactional guarantees that can be mitigated with sharding or replication. Be careful about reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_149",
+    "text": "Stored procedures — Trade-offs Stored procedures: Trade-offs. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics. At its core, it means reducing disk I/O using locks or MVCC depending on the engine. A typical example is trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_150",
+    "text": "Inverted indexes — Short tutorial Inverted indexes — Short tutorial. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. It helps with improving throughput in analytics workloads which can complicate migrations over time. A typical example is improving throughput in analytics workloads using locks or MVCC depending on the engine. This focuses on trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_151",
+    "text": "Query rewriting — Performance tips Query rewriting: Performance tips. Be careful about preserving transactional guarantees using locks or MVCC depending on the engine. This focuses on scaling writes horizontally which can complicate migrations over time. Be careful about improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_152",
+    "text": "Statistics and histograms — Common pitfalls Statistics and histograms (Common pitfalls). A common optimization is preserving transactional guarantees which can complicate migrations over time. A typical example is handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_153",
+    "text": "ETL pipelines — Best practices ETL pipelines (Best practices). It contrasts with scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_154",
+    "text": "Data warehouses — Common pitfalls Data warehouses: Common pitfalls. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on handling concurrent access using locks or MVCC depending on the engine. At its core, it means preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_155",
+    "text": "Prepared statements — Best practices Prepared statements: Best practices. A typical example is preserving transactional guarantees by creating appropriate indexes and statistics. It helps with scaling writes horizontally that can be mitigated with sharding or replication. A typical example is improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_156",
+    "text": "ACID properties — Historical context ACID properties (Historical context). A common optimization is reducing disk I/O which can complicate migrations over time. Be careful about scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_157",
+    "text": "Foreign data wrappers — Short tutorial Foreign data wrappers: Short tutorial. A common optimization is handling concurrent access that can be mitigated with sharding or replication. It helps with simplifying schema evolution that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_158",
+    "text": "Online schema change — Use case and example Online schema change: Use case and example. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. It helps with simplifying schema evolution which can complicate migrations over time. A common optimization is achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_159",
+    "text": "Transactions — Common pitfalls Transactions — Common pitfalls. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools. It helps with trading strong consistency for availability and is often used in analytics pipelines. At its core, it means improving throughput in analytics workloads that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_160",
+    "text": "Encryption in transit — Implementation notes Encryption in transit — Implementation notes. It helps with achieving low-latency reads by creating appropriate indexes and statistics. A typical example is scaling writes horizontally by creating appropriate indexes and statistics. A typical example is scaling writes horizontally and requires careful tuning of buffer pools. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_161",
+    "text": "Caching strategies — Historical context Caching strategies — Historical context. It contrasts with scaling writes horizontally and is often used in analytics pipelines. This focuses on trading strong consistency for availability which can complicate migrations over time. It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics. A typical example is handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_162",
+    "text": "Encryption at rest — Use case and example Encryption at rest (Use case and example). It helps with scaling writes horizontally and requires careful tuning of buffer pools. It helps with achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_163",
+    "text": "Foreign keys — Short tutorial Foreign keys — Short tutorial. Be careful about achieving low-latency reads by creating appropriate indexes and statistics. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. At its core, it means handling concurrent access using locks or MVCC depending on the engine. It helps with preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_164",
+    "text": "Buffer pool — Use case and example Buffer pool — Use case and example. It contrasts with simplifying schema evolution using locks or MVCC depending on the engine. Be careful about simplifying schema evolution which can complicate migrations over time. A common optimization is improving throughput in analytics workloads which can complicate migrations over time. A common optimization is achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_165",
+    "text": "Inverted indexes — Implementation notes Inverted indexes — Implementation notes. This focuses on reducing disk I/O and requires careful tuning of buffer pools. Be careful about achieving low-latency reads that can be mitigated with sharding or replication. A common optimization is handling concurrent access by creating appropriate indexes and statistics. It helps with simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_166",
+    "text": "Change data capture (CDC) — Trade-offs Change data capture (CDC): Trade-offs. A common optimization is scaling writes horizontally using locks or MVCC depending on the engine. This focuses on scaling writes horizontally that can be mitigated with sharding or replication. Be careful about reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_167",
+    "text": "Versioned rows — Best practices Versioned rows (Best practices). At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_168",
+    "text": "Compression — Implementation notes Compression — Implementation notes. A common optimization is achieving low-latency reads by creating appropriate indexes and statistics. Be careful about trading strong consistency for availability which can complicate migrations over time. Be careful about preserving transactional guarantees using locks or MVCC depending on the engine. It helps with reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_169",
+    "text": "Document stores — Trade-offs Document stores (Trade-offs). At its core, it means handling concurrent access and is often used in analytics pipelines. It helps with achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_170",
+    "text": "Geospatial indexing — Historical context Geospatial indexing — Historical context. At its core, it means handling concurrent access and requires careful tuning of buffer pools. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means trading strong consistency for availability and requires careful tuning of buffer pools. Be careful about scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_171",
+    "text": "OLTP vs OLAP — Implementation notes OLTP vs OLAP (Implementation notes). Be careful about achieving low-latency reads by creating appropriate indexes and statistics. At its core, it means improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_172",
+    "text": "JSON data types — Performance tips JSON data types: Performance tips. A common optimization is reducing disk I/O that can be mitigated with sharding or replication. It helps with preserving transactional guarantees using locks or MVCC depending on the engine. Be careful about reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_173",
+    "text": "Temporal databases — Common pitfalls Temporal databases: Common pitfalls. A typical example is improving throughput in analytics workloads using locks or MVCC depending on the engine. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_174",
+    "text": "Query rewriting — Common pitfalls Query rewriting — Common pitfalls. It helps with improving throughput in analytics workloads that can be mitigated with sharding or replication. This focuses on improving throughput in analytics workloads and requires careful tuning of buffer pools. It contrasts with scaling writes horizontally and requires careful tuning of buffer pools. This focuses on trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_175",
+    "text": "Relational model — Performance tips Relational model — Performance tips. This focuses on handling concurrent access which can complicate migrations over time. A typical example is reducing disk I/O that can be mitigated with sharding or replication. This focuses on reducing disk I/O which can complicate migrations over time. This focuses on scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_176",
+    "text": "Two-phase commit — Common pitfalls Two-phase commit — Common pitfalls. A common optimization is trading strong consistency for availability and is often used in analytics pipelines. It helps with improving throughput in analytics workloads which can complicate migrations over time. It helps with reducing disk I/O and requires careful tuning of buffer pools. A common optimization is simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_177",
+    "text": "Data modeling — Use case and example Data modeling: Use case and example. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication. At its core, it means achieving low-latency reads using locks or MVCC depending on the engine. It contrasts with handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_178",
+    "text": "Snowflake schema — Performance tips Snowflake schema: Performance tips. It helps with preserving transactional guarantees by creating appropriate indexes and statistics. A typical example is achieving low-latency reads and requires careful tuning of buffer pools. It contrasts with reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_179",
+    "text": "ACID properties — Performance tips ACID properties: Performance tips. This focuses on reducing disk I/O that can be mitigated with sharding or replication. This focuses on improving throughput in analytics workloads that can be mitigated with sharding or replication. A common optimization is handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_180",
+    "text": "Cardinality estimation — Performance tips Cardinality estimation — Performance tips. At its core, it means handling concurrent access by creating appropriate indexes and statistics. Be careful about scaling writes horizontally by creating appropriate indexes and statistics. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_181",
+    "text": "Log-structured merge trees (LSM) — Common pitfalls Log-structured merge trees (LSM) — Common pitfalls. Be careful about achieving low-latency reads which can complicate migrations over time. A typical example is scaling writes horizontally using locks or MVCC depending on the engine. Be careful about simplifying schema evolution and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_182",
+    "text": "Page size and layout — Concept overview Page size and layout (Concept overview). A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_183",
+    "text": "Strong consistency — Implementation notes Strong consistency — Implementation notes. At its core, it means improving throughput in analytics workloads using locks or MVCC depending on the engine. Be careful about trading strong consistency for availability which can complicate migrations over time. Be careful about simplifying schema evolution which can complicate migrations over time. At its core, it means scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_184",
+    "text": "Columnar storage — Use case and example Columnar storage (Use case and example). It contrasts with preserving transactional guarantees using locks or MVCC depending on the engine. Be careful about achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_185",
+    "text": "Consensus (Paxos/Raft) — Short tutorial Consensus (Paxos/Raft) — Short tutorial. A common optimization is achieving low-latency reads which can complicate migrations over time. At its core, it means preserving transactional guarantees and is often used in analytics pipelines. This focuses on achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is reducing disk I/O and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_186",
+    "text": "Caching strategies — Performance tips Caching strategies — Performance tips. Be careful about achieving low-latency reads which can complicate migrations over time. At its core, it means preserving transactional guarantees and is often used in analytics pipelines. It helps with improving throughput in analytics workloads that can be mitigated with sharding or replication. A common optimization is preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_187",
+    "text": "Backup and recovery — Historical context Backup and recovery — Historical context. It helps with improving throughput in analytics workloads using locks or MVCC depending on the engine. It contrasts with improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means preserving transactional guarantees and is often used in analytics pipelines. It helps with handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_188",
+    "text": "Strong consistency — Common pitfalls Strong consistency: Common pitfalls. A typical example is trading strong consistency for availability and is often used in analytics pipelines. At its core, it means achieving low-latency reads and is often used in analytics pipelines. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_189",
+    "text": "Time-series databases — Historical context Time-series databases (Historical context). It contrasts with improving throughput in analytics workloads and requires careful tuning of buffer pools. A common optimization is improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_190",
+    "text": "Versioned rows — Concept overview Versioned rows — Concept overview. This focuses on reducing disk I/O and requires careful tuning of buffer pools. This focuses on handling concurrent access which can complicate migrations over time. At its core, it means achieving low-latency reads using locks or MVCC depending on the engine. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_191",
+    "text": "Eventual consistency — Best practices Eventual consistency (Best practices). A typical example is handling concurrent access that can be mitigated with sharding or replication. A common optimization is improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_192",
+    "text": "ACID properties — Best practices ACID properties — Best practices. A typical example is scaling writes horizontally using locks or MVCC depending on the engine. Be careful about trading strong consistency for availability by creating appropriate indexes and statistics. This focuses on reducing disk I/O that can be mitigated with sharding or replication. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_193",
+    "text": "ORM trade-offs — Best practices ORM trade-offs (Best practices). It contrasts with preserving transactional guarantees and is often used in analytics pipelines. It contrasts with trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_194",
+    "text": "Strong consistency — Implementation notes Strong consistency — Implementation notes. It contrasts with reducing disk I/O and requires careful tuning of buffer pools. It contrasts with handling concurrent access using locks or MVCC depending on the engine. It helps with trading strong consistency for availability which can complicate migrations over time. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_195",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Concept overview Hybrid transactional/analytical processing (HTAP) — Concept overview. At its core, it means reducing disk I/O which can complicate migrations over time. It contrasts with trading strong consistency for availability and requires careful tuning of buffer pools. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication. It contrasts with reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_196",
+    "text": "B-tree indexes — Performance tips B-tree indexes: Performance tips. It contrasts with improving throughput in analytics workloads and is often used in analytics pipelines. This focuses on reducing disk I/O and requires careful tuning of buffer pools. A typical example is handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_197",
+    "text": "Replication — Short tutorial Replication: Short tutorial. It contrasts with trading strong consistency for availability using locks or MVCC depending on the engine. A typical example is simplifying schema evolution that can be mitigated with sharding or replication. At its core, it means trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_198",
+    "text": "Document stores — Use case and example Document stores — Use case and example. A common optimization is preserving transactional guarantees using locks or MVCC depending on the engine. This focuses on trading strong consistency for availability by creating appropriate indexes and statistics. It contrasts with reducing disk I/O and is often used in analytics pipelines. Be careful about trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_199",
+    "text": "BASE model — Implementation notes BASE model (Implementation notes). It helps with achieving low-latency reads and is often used in analytics pipelines. Be careful about trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_200",
+    "text": "Encryption at rest — Use case and example Encryption at rest: Use case and example. A typical example is simplifying schema evolution which can complicate migrations over time. A common optimization is simplifying schema evolution and requires careful tuning of buffer pools. It helps with preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_201",
+    "text": "RocksDB/LevelDB internals — Trade-offs RocksDB/LevelDB internals (Trade-offs). It contrasts with scaling writes horizontally using locks or MVCC depending on the engine. At its core, it means reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_202",
+    "text": "BASE model — Use case and example BASE model (Use case and example). Be careful about reducing disk I/O that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_203",
+    "text": "Event sourcing — Performance tips Event sourcing — Performance tips. Be careful about simplifying schema evolution and requires careful tuning of buffer pools. It helps with simplifying schema evolution by creating appropriate indexes and statistics. A typical example is scaling writes horizontally and is often used in analytics pipelines. It helps with simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_204",
+    "text": "CAP theorem — Comparison with alternatives CAP theorem (Comparison with alternatives). It helps with scaling writes horizontally which can complicate migrations over time. It contrasts with reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_205",
+    "text": "Parameterized queries — Performance tips Parameterized queries (Performance tips). This focuses on simplifying schema evolution and is often used in analytics pipelines. This focuses on trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_206",
+    "text": "Geospatial indexing — Short tutorial Geospatial indexing: Short tutorial. A typical example is preserving transactional guarantees that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads which can complicate migrations over time. A typical example is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_207",
+    "text": "Adaptive indexing — Trade-offs Adaptive indexing — Trade-offs. It contrasts with achieving low-latency reads and is often used in analytics pipelines. It helps with scaling writes horizontally which can complicate migrations over time. A typical example is reducing disk I/O that can be mitigated with sharding or replication. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_208",
+    "text": "Time-series databases — Concept overview Time-series databases — Concept overview. It helps with achieving low-latency reads which can complicate migrations over time. It contrasts with scaling writes horizontally and requires careful tuning of buffer pools. This focuses on trading strong consistency for availability and requires careful tuning of buffer pools. It helps with simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_209",
+    "text": "Log-structured merge trees (LSM) — Performance tips Log-structured merge trees (LSM) (Performance tips). A common optimization is simplifying schema evolution and requires careful tuning of buffer pools. It helps with trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_210",
+    "text": "Indexing — Historical context Indexing — Historical context. It contrasts with reducing disk I/O using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics. A common optimization is handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_211",
+    "text": "Federated queries — Comparison with alternatives Federated queries (Comparison with alternatives). It contrasts with trading strong consistency for availability using locks or MVCC depending on the engine. This focuses on reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_212",
+    "text": "Query caching — Short tutorial Query caching — Short tutorial. Be careful about simplifying schema evolution and is often used in analytics pipelines. This focuses on improving throughput in analytics workloads using locks or MVCC depending on the engine. A typical example is trading strong consistency for availability using locks or MVCC depending on the engine. This focuses on simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_213",
+    "text": "RocksDB/LevelDB internals — Historical context RocksDB/LevelDB internals (Historical context). It contrasts with achieving low-latency reads that can be mitigated with sharding or replication. It helps with preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_214",
+    "text": "Isolation levels — Implementation notes Isolation levels: Implementation notes. It contrasts with reducing disk I/O using locks or MVCC depending on the engine. It contrasts with preserving transactional guarantees and requires careful tuning of buffer pools. This focuses on simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_215",
+    "text": "Graph databases — Historical context Graph databases — Historical context. It helps with improving throughput in analytics workloads by creating appropriate indexes and statistics. It contrasts with trading strong consistency for availability and requires careful tuning of buffer pools. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_216",
+    "text": "BASE model — Short tutorial BASE model: Short tutorial. It helps with trading strong consistency for availability which can complicate migrations over time. This focuses on achieving low-latency reads by creating appropriate indexes and statistics. A typical example is reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_217",
+    "text": "Inverted indexes — Performance tips Inverted indexes (Performance tips). This focuses on scaling writes horizontally and requires careful tuning of buffer pools. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_218",
+    "text": "Denormalization — Historical context Denormalization (Historical context). It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication. At its core, it means scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_219",
+    "text": "Stored procedures — Implementation notes Stored procedures: Implementation notes. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools. At its core, it means trading strong consistency for availability which can complicate migrations over time. Be careful about simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_220",
+    "text": "LRU and CLOCK algorithms — Best practices LRU and CLOCK algorithms — Best practices. A common optimization is simplifying schema evolution that can be mitigated with sharding or replication. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means simplifying schema evolution and is often used in analytics pipelines. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_221",
+    "text": "Hash indexes — Historical context Hash indexes: Historical context. It helps with simplifying schema evolution by creating appropriate indexes and statistics. It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication. Be careful about improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_222",
+    "text": "Security: authentication and authorization — Trade-offs Security: authentication and authorization (Trade-offs). At its core, it means reducing disk I/O that can be mitigated with sharding or replication. This focuses on achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_223",
+    "text": "Query rewriting — Short tutorial Query rewriting — Short tutorial. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication. Be careful about reducing disk I/O that can be mitigated with sharding or replication. This focuses on scaling writes horizontally that can be mitigated with sharding or replication. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_224",
+    "text": "B-tree indexes — Trade-offs B-tree indexes — Trade-offs. At its core, it means trading strong consistency for availability using locks or MVCC depending on the engine. A common optimization is achieving low-latency reads and is often used in analytics pipelines. It contrasts with handling concurrent access which can complicate migrations over time. A typical example is preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_225",
+    "text": "Cardinality estimation — Use case and example Cardinality estimation: Use case and example. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools. Be careful about trading strong consistency for availability by creating appropriate indexes and statistics. Be careful about simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_226",
+    "text": "Schema migrations — Historical context Schema migrations — Historical context. A typical example is simplifying schema evolution and is often used in analytics pipelines. A common optimization is scaling writes horizontally and is often used in analytics pipelines. Be careful about scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_227",
+    "text": "Kafka integration — Concept overview Kafka integration (Concept overview). It contrasts with simplifying schema evolution and requires careful tuning of buffer pools. It contrasts with simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_228",
+    "text": "Key-value stores — Short tutorial Key-value stores — Short tutorial. A typical example is trading strong consistency for availability which can complicate migrations over time. It helps with reducing disk I/O and requires careful tuning of buffer pools. It contrasts with reducing disk I/O which can complicate migrations over time. Be careful about scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_229",
+    "text": "Star schema — Trade-offs Star schema (Trade-offs). A typical example is handling concurrent access and requires careful tuning of buffer pools. This focuses on improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_230",
+    "text": "Explain analyze — Performance tips Explain analyze (Performance tips). A typical example is preserving transactional guarantees and is often used in analytics pipelines. A typical example is simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_231",
+    "text": "Joins — Trade-offs Joins: Trade-offs. This focuses on simplifying schema evolution which can complicate migrations over time. It helps with handling concurrent access which can complicate migrations over time. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_232",
+    "text": "Query optimization — Historical context Query optimization (Historical context). This focuses on preserving transactional guarantees and requires careful tuning of buffer pools. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_233",
+    "text": "Geospatial indexing — Use case and example Geospatial indexing — Use case and example. This focuses on handling concurrent access by creating appropriate indexes and statistics. It helps with reducing disk I/O by creating appropriate indexes and statistics. Be careful about achieving low-latency reads that can be mitigated with sharding or replication. A common optimization is improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_234",
+    "text": "Normalization — Historical context Normalization: Historical context. It contrasts with trading strong consistency for availability and requires careful tuning of buffer pools. At its core, it means improving throughput in analytics workloads using locks or MVCC depending on the engine. At its core, it means trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_235",
+    "text": "Full-text search — Historical context Full-text search (Historical context). At its core, it means trading strong consistency for availability by creating appropriate indexes and statistics. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_236",
+    "text": "Data modeling — Performance tips Data modeling — Performance tips. A common optimization is simplifying schema evolution which can complicate migrations over time. Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics. This focuses on reducing disk I/O by creating appropriate indexes and statistics. It contrasts with reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_237",
+    "text": "ETL pipelines — Historical context ETL pipelines (Historical context). A typical example is simplifying schema evolution by creating appropriate indexes and statistics. A typical example is reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_238",
+    "text": "Durability vs performance — Short tutorial Durability vs performance — Short tutorial. At its core, it means trading strong consistency for availability and is often used in analytics pipelines. A common optimization is handling concurrent access by creating appropriate indexes and statistics. It helps with trading strong consistency for availability using locks or MVCC depending on the engine. At its core, it means improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_239",
+    "text": "Connection pooling — Use case and example Connection pooling — Use case and example. This focuses on preserving transactional guarantees and is often used in analytics pipelines. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication. It helps with preserving transactional guarantees that can be mitigated with sharding or replication. A common optimization is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_240",
+    "text": "Concurrency control — Concept overview Concurrency control — Concept overview. This focuses on handling concurrent access and is often used in analytics pipelines. At its core, it means handling concurrent access using locks or MVCC depending on the engine. It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_241",
+    "text": "Columnar compression codecs — Comparison with alternatives Columnar compression codecs: Comparison with alternatives. A common optimization is simplifying schema evolution and is often used in analytics pipelines. This focuses on scaling writes horizontally using locks or MVCC depending on the engine. Be careful about achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_242",
+    "text": "Serverless databases — Use case and example Serverless databases (Use case and example). A common optimization is trading strong consistency for availability and requires careful tuning of buffer pools. It contrasts with achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_243",
+    "text": "Prepared statements — Concept overview Prepared statements (Concept overview). A common optimization is simplifying schema evolution using locks or MVCC depending on the engine. This focuses on simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_244",
+    "text": "Star schema — Common pitfalls Star schema — Common pitfalls. It contrasts with scaling writes horizontally and requires careful tuning of buffer pools. This focuses on handling concurrent access and is often used in analytics pipelines. It contrasts with trading strong consistency for availability and is often used in analytics pipelines. Be careful about reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_245",
+    "text": "Encryption at rest — Short tutorial Encryption at rest — Short tutorial. This focuses on improving throughput in analytics workloads which can complicate migrations over time. Be careful about preserving transactional guarantees using locks or MVCC depending on the engine. It helps with simplifying schema evolution and is often used in analytics pipelines. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_246",
+    "text": "Online schema change — Use case and example Online schema change: Use case and example. A common optimization is handling concurrent access using locks or MVCC depending on the engine. It contrasts with handling concurrent access by creating appropriate indexes and statistics. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_247",
+    "text": "Indexing — Best practices Indexing — Best practices. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics. A typical example is achieving low-latency reads which can complicate migrations over time. A common optimization is preserving transactional guarantees and is often used in analytics pipelines. It contrasts with reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_248",
+    "text": "Star schema — Use case and example Star schema — Use case and example. A common optimization is handling concurrent access by creating appropriate indexes and statistics. At its core, it means handling concurrent access which can complicate migrations over time. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. It contrasts with scaling writes horizontally and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_249",
+    "text": "Query optimization — Best practices Query optimization (Best practices). This focuses on preserving transactional guarantees by creating appropriate indexes and statistics. A typical example is scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_250",
+    "text": "Versioned rows — Performance tips Versioned rows: Performance tips. This focuses on trading strong consistency for availability using locks or MVCC depending on the engine. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools. It contrasts with handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_251",
+    "text": "RocksDB/LevelDB internals — Use case and example RocksDB/LevelDB internals: Use case and example. Be careful about achieving low-latency reads which can complicate migrations over time. It helps with handling concurrent access by creating appropriate indexes and statistics. A common optimization is scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_252",
+    "text": "Kafka integration — Historical context Kafka integration (Historical context). A common optimization is reducing disk I/O that can be mitigated with sharding or replication. This focuses on simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_253",
+    "text": "Spatial queries — Common pitfalls Spatial queries: Common pitfalls. A typical example is scaling writes horizontally and is often used in analytics pipelines. It contrasts with trading strong consistency for availability and requires careful tuning of buffer pools. It contrasts with preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_254",
+    "text": "Concurrency control — Performance tips Concurrency control: Performance tips. It contrasts with reducing disk I/O by creating appropriate indexes and statistics. This focuses on simplifying schema evolution which can complicate migrations over time. It helps with preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_255",
+    "text": "Cost-based optimization — Implementation notes Cost-based optimization (Implementation notes). A typical example is reducing disk I/O using locks or MVCC depending on the engine. At its core, it means scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_256",
+    "text": "Query optimization — Performance tips Query optimization (Performance tips). It helps with handling concurrent access and requires careful tuning of buffer pools. A typical example is scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_257",
+    "text": "Bloom filters — Use case and example Bloom filters: Use case and example. This focuses on handling concurrent access using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads by creating appropriate indexes and statistics. At its core, it means trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_258",
+    "text": "Serverless databases — Implementation notes Serverless databases: Implementation notes. This focuses on reducing disk I/O by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics. This focuses on preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_259",
+    "text": "CAP theorem — Short tutorial CAP theorem (Short tutorial). It contrasts with trading strong consistency for availability which can complicate migrations over time. This focuses on trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_260",
+    "text": "Checkpoints — Trade-offs Checkpoints: Trade-offs. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. A typical example is improving throughput in analytics workloads which can complicate migrations over time. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_261",
+    "text": "Document stores — Comparison with alternatives Document stores: Comparison with alternatives. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools. It contrasts with handling concurrent access which can complicate migrations over time. It contrasts with preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_262",
+    "text": "Schema migrations — Best practices Schema migrations (Best practices). It helps with scaling writes horizontally by creating appropriate indexes and statistics. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_263",
+    "text": "ER diagrams — Short tutorial ER diagrams: Short tutorial. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. A common optimization is achieving low-latency reads and is often used in analytics pipelines. Be careful about handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_264",
+    "text": "Distributed transactions — Common pitfalls Distributed transactions: Common pitfalls. Be careful about preserving transactional guarantees and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees that can be mitigated with sharding or replication. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_265",
+    "text": "Consensus (Paxos/Raft) — Trade-offs Consensus (Paxos/Raft) — Trade-offs. A typical example is simplifying schema evolution which can complicate migrations over time. This focuses on reducing disk I/O using locks or MVCC depending on the engine. At its core, it means achieving low-latency reads using locks or MVCC depending on the engine. Be careful about improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_266",
+    "text": "Columnar storage — Short tutorial Columnar storage: Short tutorial. It contrasts with simplifying schema evolution and is often used in analytics pipelines. A common optimization is simplifying schema evolution and is often used in analytics pipelines. This focuses on handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_267",
+    "text": "Garbage collection in DBs — Historical context Garbage collection in DBs: Historical context. A typical example is trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on preserving transactional guarantees and is often used in analytics pipelines. A typical example is simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_268",
+    "text": "LRU and CLOCK algorithms — Historical context LRU and CLOCK algorithms: Historical context. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics. A common optimization is simplifying schema evolution which can complicate migrations over time. A typical example is scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_269",
+    "text": "Online schema change — Comparison with alternatives Online schema change — Comparison with alternatives. This focuses on simplifying schema evolution that can be mitigated with sharding or replication. A typical example is achieving low-latency reads and requires careful tuning of buffer pools. Be careful about reducing disk I/O which can complicate migrations over time. At its core, it means preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_270",
+    "text": "Concurrency control — Performance tips Concurrency control (Performance tips). A typical example is simplifying schema evolution and requires careful tuning of buffer pools. This focuses on preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_271",
+    "text": "Constraints — Use case and example Constraints — Use case and example. This focuses on handling concurrent access which can complicate migrations over time. It helps with trading strong consistency for availability by creating appropriate indexes and statistics. It helps with improving throughput in analytics workloads which can complicate migrations over time. A typical example is trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_272",
+    "text": "Caching strategies — Short tutorial Caching strategies — Short tutorial. It contrasts with achieving low-latency reads by creating appropriate indexes and statistics. It helps with reducing disk I/O using locks or MVCC depending on the engine. A typical example is handling concurrent access and is often used in analytics pipelines. A typical example is reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_273",
+    "text": "Compression — Common pitfalls Compression (Common pitfalls). At its core, it means reducing disk I/O that can be mitigated with sharding or replication. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_274",
+    "text": "CAP theorem — Short tutorial CAP theorem (Short tutorial). At its core, it means handling concurrent access using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_275",
+    "text": "Joins — Concept overview Joins (Concept overview). Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics. This focuses on preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_276",
+    "text": "Joins — Concept overview Joins: Concept overview. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine. It helps with reducing disk I/O and is often used in analytics pipelines. It contrasts with trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_277",
+    "text": "Federated queries — Best practices Federated queries (Best practices). At its core, it means preserving transactional guarantees which can complicate migrations over time. A typical example is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_278",
+    "text": "Write-ahead log (WAL) — Short tutorial Write-ahead log (WAL): Short tutorial. At its core, it means reducing disk I/O using locks or MVCC depending on the engine. A common optimization is preserving transactional guarantees that can be mitigated with sharding or replication. It helps with achieving low-latency reads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_279",
+    "text": "Query planner — Best practices Query planner — Best practices. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines. This focuses on trading strong consistency for availability and requires careful tuning of buffer pools. This focuses on simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_280",
+    "text": "Cost-based optimization — Common pitfalls Cost-based optimization: Common pitfalls. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics. This focuses on trading strong consistency for availability using locks or MVCC depending on the engine. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_281",
+    "text": "Backup and recovery — Historical context Backup and recovery — Historical context. It contrasts with reducing disk I/O using locks or MVCC depending on the engine. It helps with trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is scaling writes horizontally that can be mitigated with sharding or replication. It helps with handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_282",
+    "text": "ORM trade-offs — Short tutorial ORM trade-offs — Short tutorial. It contrasts with trading strong consistency for availability using locks or MVCC depending on the engine. It helps with simplifying schema evolution by creating appropriate indexes and statistics. Be careful about reducing disk I/O using locks or MVCC depending on the engine. Be careful about reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_283",
+    "text": "Temporal databases — Historical context Temporal databases (Historical context). A typical example is trading strong consistency for availability and requires careful tuning of buffer pools. It helps with improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_284",
+    "text": "Change data capture (CDC) — Historical context Change data capture (CDC) — Historical context. At its core, it means handling concurrent access and requires careful tuning of buffer pools. It helps with scaling writes horizontally and is often used in analytics pipelines. This focuses on preserving transactional guarantees and is often used in analytics pipelines. A typical example is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_285",
+    "text": "Columnar compression codecs — Use case and example Columnar compression codecs: Use case and example. At its core, it means scaling writes horizontally and requires careful tuning of buffer pools. It helps with preserving transactional guarantees and is often used in analytics pipelines. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_286",
+    "text": "Cardinality estimation — Performance tips Cardinality estimation (Performance tips). A common optimization is improving throughput in analytics workloads that can be mitigated with sharding or replication. It contrasts with preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_287",
+    "text": "Garbage collection in DBs — Short tutorial Garbage collection in DBs: Short tutorial. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics. It contrasts with handling concurrent access by creating appropriate indexes and statistics. This focuses on improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_288",
+    "text": "Star schema — Trade-offs Star schema — Trade-offs. It helps with reducing disk I/O and requires careful tuning of buffer pools. This focuses on achieving low-latency reads and is often used in analytics pipelines. It helps with improving throughput in analytics workloads by creating appropriate indexes and statistics. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_289",
+    "text": "Time-series databases — Historical context Time-series databases (Historical context). At its core, it means scaling writes horizontally and requires careful tuning of buffer pools. It contrasts with reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_290",
+    "text": "Federated queries — Performance tips Federated queries — Performance tips. At its core, it means scaling writes horizontally and requires careful tuning of buffer pools. It helps with handling concurrent access and requires careful tuning of buffer pools. This focuses on improving throughput in analytics workloads by creating appropriate indexes and statistics. A common optimization is simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_291",
+    "text": "Normalization — Performance tips Normalization (Performance tips). Be careful about scaling writes horizontally and requires careful tuning of buffer pools. A common optimization is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_292",
+    "text": "Log-structured merge trees (LSM) — Best practices Log-structured merge trees (LSM) — Best practices. It helps with reducing disk I/O using locks or MVCC depending on the engine. Be careful about preserving transactional guarantees that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally and is often used in analytics pipelines. A common optimization is reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_293",
+    "text": "Isolation levels — Historical context Isolation levels (Historical context). A common optimization is preserving transactional guarantees and is often used in analytics pipelines. A typical example is scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_294",
+    "text": "Full-text search — Common pitfalls Full-text search — Common pitfalls. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. A typical example is trading strong consistency for availability which can complicate migrations over time. It helps with handling concurrent access that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_295",
+    "text": "Encryption in transit — Performance tips Encryption in transit — Performance tips. Be careful about improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is scaling writes horizontally by creating appropriate indexes and statistics. It contrasts with simplifying schema evolution and is often used in analytics pipelines. This focuses on improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_296",
+    "text": "Backup and recovery — Best practices Backup and recovery: Best practices. A common optimization is preserving transactional guarantees and requires careful tuning of buffer pools. This focuses on achieving low-latency reads and is often used in analytics pipelines. At its core, it means scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_297",
+    "text": "Backup and recovery — Short tutorial Backup and recovery (Short tutorial). It helps with reducing disk I/O which can complicate migrations over time. This focuses on reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_298",
+    "text": "Hash indexes — Common pitfalls Hash indexes: Common pitfalls. At its core, it means preserving transactional guarantees which can complicate migrations over time. Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics. A typical example is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_299",
+    "text": "Distributed transactions — Historical context Distributed transactions — Historical context. This focuses on handling concurrent access which can complicate migrations over time. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. Be careful about simplifying schema evolution which can complicate migrations over time. It contrasts with reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_300",
+    "text": "Parameterized queries — Comparison with alternatives Parameterized queries — Comparison with alternatives. It helps with trading strong consistency for availability which can complicate migrations over time. It helps with trading strong consistency for availability using locks or MVCC depending on the engine. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. A typical example is handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_301",
+    "text": "Garbage collection in DBs — Performance tips Garbage collection in DBs: Performance tips. A common optimization is handling concurrent access and requires careful tuning of buffer pools. A common optimization is achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_302",
+    "text": "Write amplification — Short tutorial Write amplification (Short tutorial). At its core, it means reducing disk I/O using locks or MVCC depending on the engine. A typical example is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_303",
+    "text": "LRU and CLOCK algorithms — Historical context LRU and CLOCK algorithms: Historical context. At its core, it means trading strong consistency for availability using locks or MVCC depending on the engine. At its core, it means achieving low-latency reads and requires careful tuning of buffer pools. At its core, it means achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_304",
+    "text": "Data warehouses — Concept overview Data warehouses (Concept overview). A common optimization is scaling writes horizontally that can be mitigated with sharding or replication. Be careful about handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_305",
+    "text": "Adaptive indexing — Use case and example Adaptive indexing (Use case and example). It helps with trading strong consistency for availability using locks or MVCC depending on the engine. Be careful about scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_306",
+    "text": "Query planner — Use case and example Query planner — Use case and example. Be careful about scaling writes horizontally that can be mitigated with sharding or replication. Be careful about simplifying schema evolution which can complicate migrations over time. It contrasts with reducing disk I/O that can be mitigated with sharding or replication. A common optimization is reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_307",
+    "text": "Denormalization — Use case and example Denormalization (Use case and example). At its core, it means achieving low-latency reads and is often used in analytics pipelines. It contrasts with achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_308",
+    "text": "Page size and layout — Performance tips Page size and layout — Performance tips. It helps with preserving transactional guarantees by creating appropriate indexes and statistics. This focuses on handling concurrent access and requires careful tuning of buffer pools. This focuses on reducing disk I/O that can be mitigated with sharding or replication. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_309",
+    "text": "Query optimization — Best practices Query optimization: Best practices. A common optimization is reducing disk I/O and is often used in analytics pipelines. A common optimization is achieving low-latency reads which can complicate migrations over time. A typical example is scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_310",
+    "text": "B-tree indexes — Implementation notes B-tree indexes (Implementation notes). It contrasts with preserving transactional guarantees which can complicate migrations over time. A common optimization is reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_311",
+    "text": "Federated queries — Common pitfalls Federated queries (Common pitfalls). A typical example is improving throughput in analytics workloads that can be mitigated with sharding or replication. A typical example is reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_312",
+    "text": "Query rewriting — Implementation notes Query rewriting (Implementation notes). A common optimization is improving throughput in analytics workloads which can complicate migrations over time. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_313",
+    "text": "Caching strategies — Short tutorial Caching strategies — Short tutorial. It helps with simplifying schema evolution that can be mitigated with sharding or replication. It helps with preserving transactional guarantees that can be mitigated with sharding or replication. This focuses on simplifying schema evolution which can complicate migrations over time. It helps with reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_314",
+    "text": "Cardinality estimation — Concept overview Cardinality estimation: Concept overview. A typical example is preserving transactional guarantees using locks or MVCC depending on the engine. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_315",
+    "text": "Spatial queries — Performance tips Spatial queries (Performance tips). A typical example is trading strong consistency for availability by creating appropriate indexes and statistics. It contrasts with handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_316",
+    "text": "CAP theorem — Use case and example CAP theorem (Use case and example). A typical example is achieving low-latency reads and is often used in analytics pipelines. A typical example is handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_317",
+    "text": "Query rewriting — Trade-offs Query rewriting — Trade-offs. It helps with reducing disk I/O which can complicate migrations over time. It helps with preserving transactional guarantees using locks or MVCC depending on the engine. It helps with handling concurrent access using locks or MVCC depending on the engine. It helps with trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_318",
+    "text": "Event sourcing — Best practices Event sourcing: Best practices. It contrasts with reducing disk I/O that can be mitigated with sharding or replication. Be careful about scaling writes horizontally that can be mitigated with sharding or replication. Be careful about achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_319",
+    "text": "Data warehouses — Concept overview Data warehouses: Concept overview. It contrasts with improving throughput in analytics workloads and is often used in analytics pipelines. Be careful about improving throughput in analytics workloads and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_320",
+    "text": "Spatial queries — Performance tips Spatial queries: Performance tips. A typical example is preserving transactional guarantees and requires careful tuning of buffer pools. It contrasts with scaling writes horizontally that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_321",
+    "text": "Page size and layout — Common pitfalls Page size and layout — Common pitfalls. A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. This focuses on trading strong consistency for availability by creating appropriate indexes and statistics. It helps with achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_322",
+    "text": "Compression — Use case and example Compression (Use case and example). This focuses on reducing disk I/O which can complicate migrations over time. It helps with simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_323",
+    "text": "Distributed transactions — Short tutorial Distributed transactions: Short tutorial. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine. It helps with preserving transactional guarantees that can be mitigated with sharding or replication. It helps with trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_324",
+    "text": "Change data capture (CDC) — Historical context Change data capture (CDC) (Historical context). It helps with simplifying schema evolution by creating appropriate indexes and statistics. It helps with scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_325",
+    "text": "Replication — Short tutorial Replication — Short tutorial. A typical example is preserving transactional guarantees and requires careful tuning of buffer pools. At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. Be careful about preserving transactional guarantees and requires careful tuning of buffer pools. This focuses on preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_326",
+    "text": "Caching strategies — Short tutorial Caching strategies — Short tutorial. A common optimization is trading strong consistency for availability and requires careful tuning of buffer pools. A common optimization is scaling writes horizontally which can complicate migrations over time. It contrasts with handling concurrent access that can be mitigated with sharding or replication. This focuses on handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_327",
+    "text": "Key-value stores — Concept overview Key-value stores — Concept overview. This focuses on achieving low-latency reads and is often used in analytics pipelines. It contrasts with simplifying schema evolution and is often used in analytics pipelines. A common optimization is scaling writes horizontally by creating appropriate indexes and statistics. It contrasts with handling concurrent access and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_328",
+    "text": "Snapshot isolation — Performance tips Snapshot isolation — Performance tips. This focuses on preserving transactional guarantees which can complicate migrations over time. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics. Be careful about scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_329",
+    "text": "JSON data types — Concept overview JSON data types (Concept overview). It helps with trading strong consistency for availability and requires careful tuning of buffer pools. A typical example is handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_330",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Historical context Hybrid transactional/analytical processing (HTAP) — Historical context. Be careful about achieving low-latency reads and requires careful tuning of buffer pools. At its core, it means scaling writes horizontally which can complicate migrations over time. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. At its core, it means reducing disk I/O which can complicate migrations over time."
+  },
+  {
+    "id": "doc_331",
+    "text": "B-tree indexes — Comparison with alternatives B-tree indexes (Comparison with alternatives). Be careful about scaling writes horizontally by creating appropriate indexes and statistics. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_332",
+    "text": "Inverted indexes — Short tutorial Inverted indexes: Short tutorial. It contrasts with scaling writes horizontally which can complicate migrations over time. It contrasts with preserving transactional guarantees using locks or MVCC depending on the engine. It contrasts with preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_333",
+    "text": "Isolation levels — Best practices Isolation levels: Best practices. It helps with trading strong consistency for availability using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is preserving transactional guarantees and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_334",
+    "text": "ORM trade-offs — Best practices ORM trade-offs (Best practices). Be careful about handling concurrent access using locks or MVCC depending on the engine. A common optimization is preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_335",
+    "text": "Denormalization — Comparison with alternatives Denormalization (Comparison with alternatives). Be careful about scaling writes horizontally using locks or MVCC depending on the engine. Be careful about preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_336",
+    "text": "Consensus (Paxos/Raft) — Historical context Consensus (Paxos/Raft) — Historical context. This focuses on reducing disk I/O by creating appropriate indexes and statistics. It contrasts with handling concurrent access and requires careful tuning of buffer pools. This focuses on achieving low-latency reads and requires careful tuning of buffer pools. A common optimization is achieving low-latency reads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_337",
+    "text": "Explain analyze — Use case and example Explain analyze: Use case and example. Be careful about trading strong consistency for availability and requires careful tuning of buffer pools. It contrasts with reducing disk I/O and requires careful tuning of buffer pools. A common optimization is simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_338",
+    "text": "Query optimization — Use case and example Query optimization: Use case and example. At its core, it means scaling writes horizontally that can be mitigated with sharding or replication. This focuses on achieving low-latency reads and is often used in analytics pipelines. It helps with trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_339",
+    "text": "Full-text search — Concept overview Full-text search (Concept overview). A common optimization is reducing disk I/O that can be mitigated with sharding or replication. This focuses on reducing disk I/O and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_340",
+    "text": "Write amplification — Use case and example Write amplification (Use case and example). It contrasts with scaling writes horizontally that can be mitigated with sharding or replication. This focuses on scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_341",
+    "text": "Temporal databases — Performance tips Temporal databases: Performance tips. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is simplifying schema evolution and is often used in analytics pipelines. A common optimization is preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_342",
+    "text": "B-tree indexes — Concept overview B-tree indexes — Concept overview. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication. Be careful about reducing disk I/O and is often used in analytics pipelines. At its core, it means preserving transactional guarantees by creating appropriate indexes and statistics. It helps with simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_343",
+    "text": "Two-phase commit — Performance tips Two-phase commit — Performance tips. It contrasts with scaling writes horizontally by creating appropriate indexes and statistics. This focuses on simplifying schema evolution and requires careful tuning of buffer pools. It contrasts with handling concurrent access that can be mitigated with sharding or replication. It helps with reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_344",
+    "text": "JSON data types — Use case and example JSON data types (Use case and example). This focuses on achieving low-latency reads and requires careful tuning of buffer pools. Be careful about improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_345",
+    "text": "Point-in-time recovery — Short tutorial Point-in-time recovery: Short tutorial. At its core, it means preserving transactional guarantees which can complicate migrations over time. It helps with preserving transactional guarantees that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_346",
+    "text": "Schema migrations — Historical context Schema migrations (Historical context). It helps with simplifying schema evolution using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_347",
+    "text": "Query caching — Historical context Query caching (Historical context). It helps with improving throughput in analytics workloads and is often used in analytics pipelines. It contrasts with scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_348",
+    "text": "Document stores — Best practices Document stores: Best practices. A typical example is reducing disk I/O and requires careful tuning of buffer pools. This focuses on handling concurrent access that can be mitigated with sharding or replication. A common optimization is handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_349",
+    "text": "Eventual consistency — Concept overview Eventual consistency — Concept overview. A typical example is improving throughput in analytics workloads and requires careful tuning of buffer pools. It contrasts with simplifying schema evolution and is often used in analytics pipelines. It helps with achieving low-latency reads that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_350",
+    "text": "Bloom filters — Best practices Bloom filters — Best practices. This focuses on trading strong consistency for availability and is often used in analytics pipelines. Be careful about handling concurrent access and requires careful tuning of buffer pools. At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. At its core, it means improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_351",
+    "text": "Distributed transactions — Short tutorial Distributed transactions — Short tutorial. A common optimization is simplifying schema evolution and requires careful tuning of buffer pools. A common optimization is improving throughput in analytics workloads and is often used in analytics pipelines. This focuses on achieving low-latency reads which can complicate migrations over time. At its core, it means reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_352",
+    "text": "Star schema — Performance tips Star schema: Performance tips. A common optimization is achieving low-latency reads that can be mitigated with sharding or replication. It contrasts with preserving transactional guarantees which can complicate migrations over time. It helps with improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_353",
+    "text": "Security: authentication and authorization — Best practices Security: authentication and authorization — Best practices. It contrasts with scaling writes horizontally and requires careful tuning of buffer pools. A typical example is simplifying schema evolution which can complicate migrations over time. A common optimization is trading strong consistency for availability and is often used in analytics pipelines. Be careful about reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_354",
+    "text": "Constraints — Comparison with alternatives Constraints: Comparison with alternatives. Be careful about trading strong consistency for availability and is often used in analytics pipelines. It contrasts with preserving transactional guarantees which can complicate migrations over time. It contrasts with improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_355",
+    "text": "CAP theorem — Performance tips CAP theorem: Performance tips. Be careful about scaling writes horizontally by creating appropriate indexes and statistics. At its core, it means simplifying schema evolution by creating appropriate indexes and statistics. A typical example is reducing disk I/O and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_356",
+    "text": "Encryption in transit — Use case and example Encryption in transit (Use case and example). A common optimization is improving throughput in analytics workloads which can complicate migrations over time. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_357",
+    "text": "Online schema change — Short tutorial Online schema change: Short tutorial. At its core, it means handling concurrent access that can be mitigated with sharding or replication. At its core, it means handling concurrent access by creating appropriate indexes and statistics. A typical example is simplifying schema evolution that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_358",
+    "text": "Spatial queries — Implementation notes Spatial queries: Implementation notes. At its core, it means improving throughput in analytics workloads that can be mitigated with sharding or replication. It helps with improving throughput in analytics workloads by creating appropriate indexes and statistics. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_359",
+    "text": "Spatial queries — Best practices Spatial queries (Best practices). At its core, it means preserving transactional guarantees which can complicate migrations over time. Be careful about reducing disk I/O by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_360",
+    "text": "Durability vs performance — Best practices Durability vs performance — Best practices. It helps with simplifying schema evolution that can be mitigated with sharding or replication. This focuses on simplifying schema evolution which can complicate migrations over time. Be careful about handling concurrent access that can be mitigated with sharding or replication. Be careful about reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_361",
+    "text": "Caching strategies — Common pitfalls Caching strategies — Common pitfalls. Be careful about handling concurrent access and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. It helps with preserving transactional guarantees using locks or MVCC depending on the engine. A common optimization is trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_362",
+    "text": "Caching strategies — Comparison with alternatives Caching strategies (Comparison with alternatives). Be careful about reducing disk I/O which can complicate migrations over time. At its core, it means scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_363",
+    "text": "Consensus (Paxos/Raft) — Concept overview Consensus (Paxos/Raft) — Concept overview. A common optimization is handling concurrent access that can be mitigated with sharding or replication. Be careful about reducing disk I/O that can be mitigated with sharding or replication. This focuses on trading strong consistency for availability and requires careful tuning of buffer pools. At its core, it means preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_364",
+    "text": "Data warehouses — Use case and example Data warehouses: Use case and example. It helps with scaling writes horizontally and is often used in analytics pipelines. It contrasts with trading strong consistency for availability that can be mitigated with sharding or replication. A typical example is scaling writes horizontally and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_365",
+    "text": "Time-series databases — Best practices Time-series databases (Best practices). At its core, it means preserving transactional guarantees that can be mitigated with sharding or replication. Be careful about improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_366",
+    "text": "OLTP vs OLAP — Performance tips OLTP vs OLAP (Performance tips). It contrasts with simplifying schema evolution using locks or MVCC depending on the engine. At its core, it means trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_367",
+    "text": "Key-value stores — Trade-offs Key-value stores — Trade-offs. It helps with reducing disk I/O using locks or MVCC depending on the engine. A typical example is achieving low-latency reads and is often used in analytics pipelines. This focuses on handling concurrent access and requires careful tuning of buffer pools. It helps with trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_368",
+    "text": "Geospatial indexing — Best practices Geospatial indexing (Best practices). A common optimization is handling concurrent access by creating appropriate indexes and statistics. A common optimization is improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_369",
+    "text": "Indexing — Short tutorial Indexing — Short tutorial. Be careful about achieving low-latency reads that can be mitigated with sharding or replication. At its core, it means handling concurrent access and is often used in analytics pipelines. At its core, it means handling concurrent access by creating appropriate indexes and statistics. This focuses on scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_370",
+    "text": "ER diagrams — Comparison with alternatives ER diagrams (Comparison with alternatives). Be careful about achieving low-latency reads that can be mitigated with sharding or replication. This focuses on reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_371",
+    "text": "Checkpoints — Performance tips Checkpoints — Performance tips. At its core, it means improving throughput in analytics workloads which can complicate migrations over time. Be careful about handling concurrent access and is often used in analytics pipelines. At its core, it means trading strong consistency for availability that can be mitigated with sharding or replication. This focuses on reducing disk I/O that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_372",
+    "text": "Snapshot isolation — Historical context Snapshot isolation: Historical context. It contrasts with scaling writes horizontally that can be mitigated with sharding or replication. It contrasts with scaling writes horizontally and requires careful tuning of buffer pools. It helps with trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_373",
+    "text": "Query rewriting — Trade-offs Query rewriting — Trade-offs. It contrasts with handling concurrent access which can complicate migrations over time. This focuses on scaling writes horizontally using locks or MVCC depending on the engine. It helps with achieving low-latency reads and requires careful tuning of buffer pools. A common optimization is achieving low-latency reads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_374",
+    "text": "Kafka integration — Historical context Kafka integration — Historical context. Be careful about handling concurrent access and requires careful tuning of buffer pools. It contrasts with scaling writes horizontally by creating appropriate indexes and statistics. A typical example is reducing disk I/O which can complicate migrations over time. A common optimization is preserving transactional guarantees using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_375",
+    "text": "Time-series databases — Common pitfalls Time-series databases (Common pitfalls). A typical example is preserving transactional guarantees by creating appropriate indexes and statistics. Be careful about scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_376",
+    "text": "Stored procedures — Implementation notes Stored procedures: Implementation notes. At its core, it means achieving low-latency reads by creating appropriate indexes and statistics. It contrasts with preserving transactional guarantees by creating appropriate indexes and statistics. It contrasts with reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_377",
+    "text": "Relational model — Best practices Relational model: Best practices. It contrasts with improving throughput in analytics workloads and is often used in analytics pipelines. Be careful about preserving transactional guarantees which can complicate migrations over time. Be careful about scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_378",
+    "text": "Strong consistency — Short tutorial Strong consistency: Short tutorial. This focuses on trading strong consistency for availability which can complicate migrations over time. Be careful about handling concurrent access that can be mitigated with sharding or replication. A typical example is trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_379",
+    "text": "OLTP vs OLAP — Best practices OLTP vs OLAP (Best practices). A typical example is handling concurrent access using locks or MVCC depending on the engine. A common optimization is achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_380",
+    "text": "Time-series databases — Implementation notes Time-series databases: Implementation notes. A typical example is improving throughput in analytics workloads that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees by creating appropriate indexes and statistics. It helps with trading strong consistency for availability by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_381",
+    "text": "Streaming ingestion — Implementation notes Streaming ingestion (Implementation notes). At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_382",
+    "text": "Sharding — Common pitfalls Sharding — Common pitfalls. At its core, it means improving throughput in analytics workloads using locks or MVCC depending on the engine. At its core, it means trading strong consistency for availability which can complicate migrations over time. At its core, it means preserving transactional guarantees which can complicate migrations over time. A typical example is scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_383",
+    "text": "Schema migrations — Concept overview Schema migrations (Concept overview). This focuses on simplifying schema evolution using locks or MVCC depending on the engine. At its core, it means scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_384",
+    "text": "Data warehouses — Historical context Data warehouses — Historical context. Be careful about scaling writes horizontally and is often used in analytics pipelines. This focuses on trading strong consistency for availability using locks or MVCC depending on the engine. A typical example is achieving low-latency reads that can be mitigated with sharding or replication. Be careful about simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_385",
+    "text": "ER diagrams — Historical context ER diagrams — Historical context. Be careful about improving throughput in analytics workloads and requires careful tuning of buffer pools. It helps with reducing disk I/O which can complicate migrations over time. Be careful about scaling writes horizontally which can complicate migrations over time. A common optimization is simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_386",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Historical context Hybrid transactional/analytical processing (HTAP) (Historical context). A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine. This focuses on simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_387",
+    "text": "Write-ahead log (WAL) — Short tutorial Write-ahead log (WAL) — Short tutorial. It helps with scaling writes horizontally which can complicate migrations over time. It contrasts with preserving transactional guarantees and requires careful tuning of buffer pools. Be careful about improving throughput in analytics workloads which can complicate migrations over time. At its core, it means simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_388",
+    "text": "NoSQL overview — Performance tips NoSQL overview — Performance tips. A typical example is reducing disk I/O by creating appropriate indexes and statistics. At its core, it means trading strong consistency for availability using locks or MVCC depending on the engine. This focuses on reducing disk I/O which can complicate migrations over time. Be careful about handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_389",
+    "text": "Change data capture (CDC) — Best practices Change data capture (CDC): Best practices. This focuses on scaling writes horizontally that can be mitigated with sharding or replication. At its core, it means reducing disk I/O and requires careful tuning of buffer pools. It helps with scaling writes horizontally by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_390",
+    "text": "ACID in distributed systems — Common pitfalls ACID in distributed systems: Common pitfalls. Be careful about simplifying schema evolution using locks or MVCC depending on the engine. This focuses on preserving transactional guarantees and is often used in analytics pipelines. It contrasts with improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_391",
+    "text": "Cardinality estimation — Common pitfalls Cardinality estimation — Common pitfalls. Be careful about simplifying schema evolution that can be mitigated with sharding or replication. Be careful about improving throughput in analytics workloads and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is scaling writes horizontally and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_392",
+    "text": "Caching strategies — Best practices Caching strategies: Best practices. It contrasts with reducing disk I/O which can complicate migrations over time. A typical example is preserving transactional guarantees which can complicate migrations over time. A typical example is simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_393",
+    "text": "Document stores — Historical context Document stores (Historical context). It helps with handling concurrent access and requires careful tuning of buffer pools. It helps with improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_394",
+    "text": "Time-series databases — Historical context Time-series databases: Historical context. It helps with trading strong consistency for availability which can complicate migrations over time. At its core, it means simplifying schema evolution and requires careful tuning of buffer pools. A common optimization is trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_395",
+    "text": "Explain analyze — Performance tips Explain analyze — Performance tips. It contrasts with scaling writes horizontally and is often used in analytics pipelines. A common optimization is scaling writes horizontally which can complicate migrations over time. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_396",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Trade-offs Hybrid transactional/analytical processing (HTAP) — Trade-offs. It helps with scaling writes horizontally and requires careful tuning of buffer pools. Be careful about improving throughput in analytics workloads by creating appropriate indexes and statistics. A typical example is handling concurrent access by creating appropriate indexes and statistics. This focuses on handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_397",
+    "text": "Foreign keys — Implementation notes Foreign keys (Implementation notes). At its core, it means improving throughput in analytics workloads and requires careful tuning of buffer pools. This focuses on achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_398",
+    "text": "RocksDB/LevelDB internals — Trade-offs RocksDB/LevelDB internals (Trade-offs). It helps with handling concurrent access and is often used in analytics pipelines. This focuses on simplifying schema evolution using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_399",
+    "text": "Consensus (Paxos/Raft) — Implementation notes Consensus (Paxos/Raft) (Implementation notes). It contrasts with handling concurrent access using locks or MVCC depending on the engine. It contrasts with achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_400",
+    "text": "Query rewriting — Use case and example Query rewriting — Use case and example. A common optimization is achieving low-latency reads which can complicate migrations over time. It helps with scaling writes horizontally and is often used in analytics pipelines. At its core, it means handling concurrent access and requires careful tuning of buffer pools. Be careful about reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_401",
+    "text": "Caching strategies — Implementation notes Caching strategies: Implementation notes. A typical example is handling concurrent access and requires careful tuning of buffer pools. At its core, it means reducing disk I/O by creating appropriate indexes and statistics. A common optimization is trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_402",
+    "text": "Foreign data wrappers — Use case and example Foreign data wrappers (Use case and example). It contrasts with achieving low-latency reads using locks or MVCC depending on the engine. This focuses on improving throughput in analytics workloads and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_403",
+    "text": "Graph databases — Trade-offs Graph databases: Trade-offs. A common optimization is preserving transactional guarantees and requires careful tuning of buffer pools. This focuses on handling concurrent access and is often used in analytics pipelines. A common optimization is simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_404",
+    "text": "LRU and CLOCK algorithms — Performance tips LRU and CLOCK algorithms (Performance tips). Be careful about preserving transactional guarantees which can complicate migrations over time. A common optimization is achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_405",
+    "text": "B-tree indexes — Trade-offs B-tree indexes — Trade-offs. It helps with scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics. Be careful about simplifying schema evolution that can be mitigated with sharding or replication. A typical example is preserving transactional guarantees and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_406",
+    "text": "Bloom filters — Implementation notes Bloom filters — Implementation notes. It contrasts with simplifying schema evolution using locks or MVCC depending on the engine. Be careful about simplifying schema evolution which can complicate migrations over time. A typical example is scaling writes horizontally that can be mitigated with sharding or replication. A typical example is improving throughput in analytics workloads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_407",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Best practices Hybrid transactional/analytical processing (HTAP) (Best practices). A common optimization is simplifying schema evolution using locks or MVCC depending on the engine. Be careful about preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_408",
+    "text": "Garbage collection in DBs — Trade-offs Garbage collection in DBs — Trade-offs. At its core, it means scaling writes horizontally and is often used in analytics pipelines. It helps with preserving transactional guarantees using locks or MVCC depending on the engine. This focuses on reducing disk I/O using locks or MVCC depending on the engine. It contrasts with simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_409",
+    "text": "Indexing — Performance tips Indexing: Performance tips. It helps with achieving low-latency reads using locks or MVCC depending on the engine. This focuses on trading strong consistency for availability and requires careful tuning of buffer pools. It helps with scaling writes horizontally using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_410",
+    "text": "Encryption at rest — Use case and example Encryption at rest: Use case and example. At its core, it means improving throughput in analytics workloads using locks or MVCC depending on the engine. It helps with handling concurrent access and is often used in analytics pipelines. Be careful about trading strong consistency for availability and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_411",
+    "text": "Write-ahead log (WAL) — Best practices Write-ahead log (WAL): Best practices. A common optimization is reducing disk I/O and is often used in analytics pipelines. This focuses on achieving low-latency reads that can be mitigated with sharding or replication. This focuses on reducing disk I/O and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_412",
+    "text": "Consensus (Paxos/Raft) — Best practices Consensus (Paxos/Raft) — Best practices. At its core, it means simplifying schema evolution that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability and requires careful tuning of buffer pools. This focuses on preserving transactional guarantees and requires careful tuning of buffer pools. It helps with trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_413",
+    "text": "CAP theorem — Common pitfalls CAP theorem — Common pitfalls. It helps with preserving transactional guarantees and requires careful tuning of buffer pools. At its core, it means improving throughput in analytics workloads and is often used in analytics pipelines. A typical example is preserving transactional guarantees and is often used in analytics pipelines. It helps with trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_414",
+    "text": "Inverted indexes — Short tutorial Inverted indexes: Short tutorial. Be careful about achieving low-latency reads which can complicate migrations over time. It contrasts with scaling writes horizontally and is often used in analytics pipelines. It helps with improving throughput in analytics workloads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_415",
+    "text": "Connection pooling — Concept overview Connection pooling — Concept overview. At its core, it means scaling writes horizontally using locks or MVCC depending on the engine. A typical example is achieving low-latency reads by creating appropriate indexes and statistics. It contrasts with preserving transactional guarantees using locks or MVCC depending on the engine. It contrasts with scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_416",
+    "text": "Compaction — Best practices Compaction — Best practices. Be careful about simplifying schema evolution using locks or MVCC depending on the engine. This focuses on improving throughput in analytics workloads and is often used in analytics pipelines. At its core, it means simplifying schema evolution and is often used in analytics pipelines. A typical example is achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_417",
+    "text": "Constraints — Implementation notes Constraints: Implementation notes. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication. At its core, it means reducing disk I/O and requires careful tuning of buffer pools. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_418",
+    "text": "Federated queries — Implementation notes Federated queries: Implementation notes. A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine. It contrasts with handling concurrent access and is often used in analytics pipelines. A typical example is trading strong consistency for availability which can complicate migrations over time."
+  },
+  {
+    "id": "doc_419",
+    "text": "Geospatial indexing — Short tutorial Geospatial indexing: Short tutorial. A common optimization is trading strong consistency for availability using locks or MVCC depending on the engine. A typical example is handling concurrent access and is often used in analytics pipelines. Be careful about simplifying schema evolution and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_420",
+    "text": "Hash indexes — Comparison with alternatives Hash indexes (Comparison with alternatives). It contrasts with reducing disk I/O by creating appropriate indexes and statistics. It helps with scaling writes horizontally which can complicate migrations over time."
+  },
+  {
+    "id": "doc_421",
+    "text": "Hash indexes — Best practices Hash indexes (Best practices). A typical example is reducing disk I/O which can complicate migrations over time. Be careful about trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_422",
+    "text": "Change data capture (CDC) — Short tutorial Change data capture (CDC): Short tutorial. Be careful about achieving low-latency reads by creating appropriate indexes and statistics. This focuses on scaling writes horizontally which can complicate migrations over time. A typical example is reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_423",
+    "text": "Data warehouses — Historical context Data warehouses: Historical context. A typical example is preserving transactional guarantees that can be mitigated with sharding or replication. A common optimization is handling concurrent access and is often used in analytics pipelines. At its core, it means preserving transactional guarantees that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_424",
+    "text": "Key-value stores — Trade-offs Key-value stores: Trade-offs. It contrasts with achieving low-latency reads by creating appropriate indexes and statistics. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics. It contrasts with reducing disk I/O using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_425",
+    "text": "ORM trade-offs — Common pitfalls ORM trade-offs (Common pitfalls). This focuses on preserving transactional guarantees and requires careful tuning of buffer pools. It contrasts with reducing disk I/O and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_426",
+    "text": "Temporal databases — Performance tips Temporal databases: Performance tips. Be careful about scaling writes horizontally that can be mitigated with sharding or replication. It helps with simplifying schema evolution and requires careful tuning of buffer pools. A common optimization is handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_427",
+    "text": "CAP theorem — Concept overview CAP theorem (Concept overview). At its core, it means scaling writes horizontally using locks or MVCC depending on the engine. It helps with handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_428",
+    "text": "ACID properties — Implementation notes ACID properties — Implementation notes. It helps with achieving low-latency reads which can complicate migrations over time. Be careful about reducing disk I/O and is often used in analytics pipelines. It helps with reducing disk I/O by creating appropriate indexes and statistics. At its core, it means improving throughput in analytics workloads that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_429",
+    "text": "Encryption at rest — Concept overview Encryption at rest: Concept overview. At its core, it means scaling writes horizontally and is often used in analytics pipelines. It helps with trading strong consistency for availability and requires careful tuning of buffer pools. At its core, it means handling concurrent access and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_430",
+    "text": "ACID in distributed systems — Implementation notes ACID in distributed systems: Implementation notes. Be careful about scaling writes horizontally using locks or MVCC depending on the engine. A common optimization is scaling writes horizontally which can complicate migrations over time. It contrasts with handling concurrent access that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_431",
+    "text": "Compression — Comparison with alternatives Compression — Comparison with alternatives. At its core, it means reducing disk I/O and requires careful tuning of buffer pools. It helps with achieving low-latency reads which can complicate migrations over time. At its core, it means simplifying schema evolution which can complicate migrations over time. A typical example is preserving transactional guarantees which can complicate migrations over time."
+  },
+  {
+    "id": "doc_432",
+    "text": "Versioned rows — Common pitfalls Versioned rows: Common pitfalls. A common optimization is simplifying schema evolution that can be mitigated with sharding or replication. Be careful about achieving low-latency reads by creating appropriate indexes and statistics. A typical example is simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_433",
+    "text": "Schema migrations — Common pitfalls Schema migrations (Common pitfalls). This focuses on reducing disk I/O by creating appropriate indexes and statistics. A typical example is simplifying schema evolution and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_434",
+    "text": "Hybrid transactional/analytical processing (HTAP) — Implementation notes Hybrid transactional/analytical processing (HTAP): Implementation notes. It contrasts with achieving low-latency reads using locks or MVCC depending on the engine. At its core, it means simplifying schema evolution using locks or MVCC depending on the engine. It contrasts with scaling writes horizontally that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_435",
+    "text": "Materialized views — Performance tips Materialized views — Performance tips. This focuses on preserving transactional guarantees using locks or MVCC depending on the engine. A common optimization is improving throughput in analytics workloads by creating appropriate indexes and statistics. Be careful about improving throughput in analytics workloads and requires careful tuning of buffer pools. A common optimization is preserving transactional guarantees by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_436",
+    "text": "ETL pipelines — Trade-offs ETL pipelines (Trade-offs). At its core, it means simplifying schema evolution by creating appropriate indexes and statistics. At its core, it means handling concurrent access which can complicate migrations over time."
+  },
+  {
+    "id": "doc_437",
+    "text": "JSON data types — Performance tips JSON data types: Performance tips. This focuses on simplifying schema evolution which can complicate migrations over time. It contrasts with improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_438",
+    "text": "Prepared statements — Comparison with alternatives Prepared statements — Comparison with alternatives. A typical example is trading strong consistency for availability that can be mitigated with sharding or replication. A common optimization is handling concurrent access that can be mitigated with sharding or replication. This focuses on improving throughput in analytics workloads which can complicate migrations over time. It contrasts with handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_439",
+    "text": "Durability vs performance — Best practices Durability vs performance (Best practices). A common optimization is handling concurrent access that can be mitigated with sharding or replication. It helps with handling concurrent access by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_440",
+    "text": "CAP theorem — Comparison with alternatives CAP theorem (Comparison with alternatives). Be careful about handling concurrent access and requires careful tuning of buffer pools. Be careful about simplifying schema evolution which can complicate migrations over time."
+  },
+  {
+    "id": "doc_441",
+    "text": "Foreign data wrappers — Best practices Foreign data wrappers: Best practices. It helps with trading strong consistency for availability and is often used in analytics pipelines. It helps with handling concurrent access by creating appropriate indexes and statistics. It helps with achieving low-latency reads which can complicate migrations over time."
+  },
+  {
+    "id": "doc_442",
+    "text": "Adaptive indexing — Common pitfalls Adaptive indexing — Common pitfalls. A common optimization is reducing disk I/O using locks or MVCC depending on the engine. This focuses on improving throughput in analytics workloads and requires careful tuning of buffer pools. A typical example is reducing disk I/O that can be mitigated with sharding or replication. A common optimization is trading strong consistency for availability and requires careful tuning of buffer pools."
+  },
+  {
+    "id": "doc_443",
+    "text": "Compaction — Short tutorial Compaction: Short tutorial. It helps with trading strong consistency for availability using locks or MVCC depending on the engine. It contrasts with simplifying schema evolution and is often used in analytics pipelines. Be careful about simplifying schema evolution by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_444",
+    "text": "Encryption at rest — Concept overview Encryption at rest (Concept overview). A typical example is scaling writes horizontally and requires careful tuning of buffer pools. It contrasts with improving throughput in analytics workloads and is often used in analytics pipelines."
+  },
+  {
+    "id": "doc_445",
+    "text": "ORM trade-offs — Implementation notes ORM trade-offs: Implementation notes. It helps with improving throughput in analytics workloads which can complicate migrations over time. Be careful about handling concurrent access that can be mitigated with sharding or replication. It helps with achieving low-latency reads by creating appropriate indexes and statistics."
+  },
+  {
+    "id": "doc_446",
+    "text": "Kafka integration — Trade-offs Kafka integration: Trade-offs. Be careful about handling concurrent access by creating appropriate indexes and statistics. Be careful about scaling writes horizontally that can be mitigated with sharding or replication. A common optimization is achieving low-latency reads using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_447",
+    "text": "Geospatial indexing — Historical context Geospatial indexing: Historical context. At its core, it means handling concurrent access and requires careful tuning of buffer pools. Be careful about scaling writes horizontally and is often used in analytics pipelines. This focuses on handling concurrent access using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_448",
+    "text": "Query caching — Implementation notes Query caching — Implementation notes. A common optimization is simplifying schema evolution which can complicate migrations over time. A common optimization is preserving transactional guarantees using locks or MVCC depending on the engine. This focuses on scaling writes horizontally and is often used in analytics pipelines. A typical example is trading strong consistency for availability using locks or MVCC depending on the engine."
+  },
+  {
+    "id": "doc_449",
+    "text": "Explain analyze — Best practices Explain analyze: Best practices. A typical example is improving throughput in analytics workloads by creating appropriate indexes and statistics. This focuses on scaling writes horizontally and is often used in analytics pipelines. Be careful about trading strong consistency for availability that can be mitigated with sharding or replication."
+  },
+  {
+    "id": "doc_450",
+    "text": "Transactions — Use case and example Transactions — Use case and example. A common optimization is reducing disk I/O which can complicate migrations over time. A common optimization is scaling writes horizontally which can complicate migrations over time. Be careful about preserving transactional guarantees and is often used in analytics pipelines. Be careful about preserving transactional guarantees by creating appropriate indexes and statistics."
+  }
+]
