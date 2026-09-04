@@ -94,10 +94,18 @@ class VendorIngestionAgent(BaseAgent):
         # Check if pre-configured benchmark vendor
         if vendor_id in PRECONFIGURED_VENDORS:
             vendor_profile = dict(PRECONFIGURED_VENDORS[vendor_id])
-            # Override with any custom user inputs provided
+            # Override with genuinely user-provided fields, but never clobber
+            # curated benchmark profiles with schema placeholder defaults
+            # (e.g. VendorInput.name defaults to "Custom Vendor").
+            placeholders = (
+                "", "Custom Vendor", "vendor.internal",
+                "Software & Technology", "Tier 2 (High)",
+                None, 85, 0
+            )
             for k, v in vendor_input.items():
-                if v:
-                    vendor_profile[k] = v
+                if v in placeholders or (isinstance(v, (dict, list)) and not v):
+                    continue
+                vendor_profile[k] = v
         else:
             # Custom vendor dynamic ingestion
             name = vendor_input.get("name", "Custom Vendor")

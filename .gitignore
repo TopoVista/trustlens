@@ -32,6 +32,7 @@ yarn-error.log*
 
 # Raw scrap/temporary data
 backend/data/raw_docs/
+backend/data/users/
 *.db
 *.db-shm
 *.db-wal

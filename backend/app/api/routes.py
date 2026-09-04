@@ -1,8 +1,10 @@
 """FastAPI API routes for TrustLens"""
 import time
 import logging
-from typing import List
-from fastapi import APIRouter, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, status, Depends
+from app.api.auth import AuthUser, get_current_user, get_current_user_context
+from app.knowledge.user_storage import UserKnowledgeContext, get_user_storage_stats
 from app.api.schemas import (
     QueryRequest,
     RAGResponse,
@@ -203,46 +205,71 @@ async def ask_vendor_question(request: QARequest):
         )
 
 
-# --- Personal Knowledge Intelligence Endpoints ---
+# --- Personal Knowledge Intelligence Endpoints (Strict Per-User Hard Disk Isolation) ---
 
-_knowledge_repo = KnowledgeRepository()
-_ingestion_agent = IngestionKnowledgeAgent(_knowledge_repo)
-_planner = AnalysisPlanner(_knowledge_repo)
+@router.get("/api/me")
+def get_me(user: AuthUser = Depends(get_current_user)):
+    """Returns the authenticated user details."""
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "name": user.name,
+        "is_authenticated": user.is_authenticated
+    }
+
+
+@router.get("/api/me/storage")
+def get_my_storage(user: AuthUser = Depends(get_current_user)):
+    """Returns local hard disk partition path and usage metrics for this user."""
+    return get_user_storage_stats(user.user_id)
 
 
 @router.get("/api/workspaces", response_model=List[WorkspaceResponse])
-def list_workspaces():
+def list_workspaces(ctx: UserKnowledgeContext = Depends(get_current_user_context)):
     """Returns list of user workspaces, creating default if none exists."""
-    _knowledge_repo.ensure_default_workspace()
-    return _knowledge_repo.list_workspaces()
+    ctx.repo.ensure_default_workspace()
+    return ctx.repo.list_workspaces()
 
 
 @router.post("/api/workspaces", response_model=WorkspaceResponse)
-def create_workspace(request: WorkspaceCreate):
+def create_workspace(
+    request: WorkspaceCreate,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Creates a new isolated user knowledge workspace."""
-    return _knowledge_repo.create_workspace(request.name, request.description)
+    return ctx.repo.create_workspace(request.name, request.description)
 
 
 @router.get("/api/workspaces/{workspace_id}/health", response_model=KnowledgeHealthResponse)
-def get_workspace_health(workspace_id: str):
+def get_workspace_health(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Calculates live knowledge health metrics for the workspace."""
-    return _knowledge_repo.get_knowledge_health(workspace_id)
+    return ctx.repo.get_knowledge_health(workspace_id)
 
 
 @router.get("/api/workspaces/{workspace_id}/discoveries", response_model=ProactiveDiscoveryResponse)
-def get_workspace_discoveries(workspace_id: str):
+def get_workspace_discoveries(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Surfaces proactive 'Things You Should Know' discoveries."""
-    discoveries = _knowledge_repo.get_proactive_discoveries(workspace_id)
+    discoveries = ctx.repo.get_proactive_discoveries(workspace_id)
     return {"discoveries": discoveries}
 
 
 @router.post("/api/workspaces/{workspace_id}/documents", response_model=DocumentResponse)
-async def upload_workspace_document(workspace_id: str, request: DocumentUploadRequest):
+async def upload_workspace_document(
+    workspace_id: str,
+    request: DocumentUploadRequest,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """
     Ingests user documents/spreadsheets, extracting entities, claims, timeline events,
-    and profiling structured CSV tables.
+    and profiling structured CSV tables into the user's isolated hard drive storage.
     """
-    result = await _ingestion_agent.ingest_content(
+    result = await ctx.ingestion_agent.ingest_content(
         workspace_id=workspace_id,
         title=request.title,
         filename=request.filename or "document.txt",
@@ -254,56 +281,79 @@ async def upload_workspace_document(workspace_id: str, request: DocumentUploadRe
 
 
 @router.get("/api/workspaces/{workspace_id}/documents")
-def get_workspace_documents(workspace_id: str):
+def get_workspace_documents(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Returns all ingested documents in the workspace."""
-    return _knowledge_repo.get_documents(workspace_id)
+    return ctx.repo.get_documents(workspace_id)
 
 
 @router.get("/api/workspaces/{workspace_id}/claims")
-def get_workspace_claims(workspace_id: str):
+def get_workspace_claims(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Returns extracted claims with linked evidence."""
-    return _knowledge_repo.get_claims(workspace_id)
+    return ctx.repo.get_claims(workspace_id)
 
 
 @router.get("/api/workspaces/{workspace_id}/entities")
-def get_workspace_entities(workspace_id: str):
+def get_workspace_entities(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Returns the Knowledge Graph nodes and edges for the workspace."""
-    return _knowledge_repo.get_knowledge_graph(workspace_id)
+    return ctx.repo.get_knowledge_graph(workspace_id)
 
 
 @router.get("/api/workspaces/{workspace_id}/timeline")
-def get_workspace_timeline(workspace_id: str):
+def get_workspace_timeline(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Returns chronological timeline events."""
-    return _knowledge_repo.get_timeline(workspace_id)
+    return ctx.repo.get_timeline(workspace_id)
 
 
 @router.get("/api/workspaces/{workspace_id}/rules", response_model=List[SemanticRuleResponse])
-def get_workspace_rules(workspace_id: str):
+def get_workspace_rules(
+    workspace_id: str,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Returns user-defined semantic memory rules."""
-    return _knowledge_repo.get_semantic_rules(workspace_id)
+    return ctx.repo.get_semantic_rules(workspace_id)
 
 
 @router.post("/api/workspaces/{workspace_id}/rules", response_model=SemanticRuleResponse)
-def add_workspace_rule(workspace_id: str, request: SemanticRuleRequest):
+def add_workspace_rule(
+    workspace_id: str,
+    request: SemanticRuleRequest,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """Adds a user-defined semantic memory rule."""
-    rule_id = _knowledge_repo.add_semantic_rule(
+    rule_id = ctx.repo.add_semantic_rule(
         workspace_id=workspace_id,
         rule_type=request.rule_type,
         rule_key=request.rule_key,
         rule_value=request.rule_value
     )
-    rules = _knowledge_repo.get_semantic_rules(workspace_id)
+    rules = ctx.repo.get_semantic_rules(workspace_id)
     return next((r for r in rules if r["id"] == rule_id), None)
 
 
 @router.post("/api/workspaces/{workspace_id}/query", response_model=KnowledgeQueryResponse)
-async def query_workspace(workspace_id: str, request: KnowledgeQueryRequest):
+async def query_workspace(
+    workspace_id: str,
+    request: KnowledgeQueryRequest,
+    ctx: UserKnowledgeContext = Depends(get_current_user_context)
+):
     """
     Executes Intent-Aware Analysis Planner over user workspace knowledge.
     Returns response complying with Phase 11 Answer Contract.
     """
     try:
-        response = await _planner.execute_plan(workspace_id, request.query)
+        response = await ctx.planner.execute_plan(workspace_id, request.query)
         return response
     except Exception as e:
         logger.error("Workspace query error: %s", e, exc_info=True)
@@ -311,5 +361,6 @@ async def query_workspace(workspace_id: str, request: KnowledgeQueryRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Knowledge query failed: {str(e)}"
         )
+
 
 

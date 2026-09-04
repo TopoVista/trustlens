@@ -1,17 +1,51 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// --- Knowledge Intelligence Workspace APIs ---
+let currentUserId = null;
+let currentTokenGetter = null;
+
+/**
+ * Configure active authenticated user context for API requests.
+ */
+export function setAuthContext(userId, tokenGetter = null) {
+  currentUserId = userId;
+  currentTokenGetter = tokenGetter;
+}
+
+async function buildHeaders(customHeaders = {}) {
+  const headers = { ...customHeaders };
+  if (currentUserId) {
+    headers["x-user-id"] = currentUserId;
+  }
+  if (currentTokenGetter && typeof currentTokenGetter === "function") {
+    try {
+      const token = await currentTokenGetter();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    } catch {}
+  }
+  return headers;
+}
+
+// --- Knowledge Intelligence Workspace APIs (Per-User Hard Disk Isolation) ---
+
+export async function getUserStorageInfo() {
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/me/storage`, { headers });
+  if (!res.ok) throw new Error("Failed to fetch user storage metrics");
+  return res.json();
+}
 
 export async function listWorkspaces() {
-  const res = await fetch(`${API_BASE}/api/workspaces`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces`, { headers });
   if (!res.ok) throw new Error("Failed to fetch workspaces");
   return res.json();
 }
 
 export async function createWorkspace(name, description = "") {
+  const headers = await buildHeaders({ "Content-Type": "application/json" });
   const res = await fetch(`${API_BASE}/api/workspaces`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ name, description }),
   });
   if (!res.ok) throw new Error("Failed to create workspace");
@@ -19,21 +53,24 @@ export async function createWorkspace(name, description = "") {
 }
 
 export async function getWorkspaceHealth(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/health`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/health`, { headers });
   if (!res.ok) throw new Error("Failed to fetch workspace health");
   return res.json();
 }
 
 export async function getWorkspaceDiscoveries(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/discoveries`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/discoveries`, { headers });
   if (!res.ok) throw new Error("Failed to fetch discoveries");
   return res.json();
 }
 
 export async function uploadDocument(workspaceId, { title, filename, raw_content, file_type = "text", authority_level = "HIGH" }) {
+  const headers = await buildHeaders({ "Content-Type": "application/json" });
   const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/documents`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       title,
       filename: filename || `${title.toLowerCase().replace(/\s+/g, "_")}.txt`,
@@ -51,39 +88,45 @@ export async function uploadDocument(workspaceId, { title, filename, raw_content
 }
 
 export async function getWorkspaceDocuments(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/documents`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/documents`, { headers });
   if (!res.ok) throw new Error("Failed to fetch documents");
   return res.json();
 }
 
 export async function getWorkspaceClaims(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/claims`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/claims`, { headers });
   if (!res.ok) throw new Error("Failed to fetch claims");
   return res.json();
 }
 
 export async function getWorkspaceEntities(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/entities`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/entities`, { headers });
   if (!res.ok) throw new Error("Failed to fetch entities");
   return res.json();
 }
 
 export async function getWorkspaceTimeline(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/timeline`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/timeline`, { headers });
   if (!res.ok) throw new Error("Failed to fetch timeline");
   return res.json();
 }
 
 export async function getWorkspaceRules(workspaceId) {
-  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/rules`);
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/rules`, { headers });
   if (!res.ok) throw new Error("Failed to fetch rules");
   return res.json();
 }
 
 export async function addWorkspaceRule(workspaceId, { rule_type, rule_key, rule_value }) {
+  const headers = await buildHeaders({ "Content-Type": "application/json" });
   const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/rules`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ rule_type, rule_key, rule_value }),
   });
   if (!res.ok) throw new Error("Failed to add semantic rule");
@@ -91,9 +134,10 @@ export async function addWorkspaceRule(workspaceId, { rule_type, rule_key, rule_
 }
 
 export async function queryKnowledge(workspaceId, query) {
+  const headers = await buildHeaders({ "Content-Type": "application/json" });
   const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/query`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ query }),
   });
   if (!res.ok) {
@@ -115,5 +159,3 @@ export async function checkHealth() {
     return false;
   }
 }
-
-

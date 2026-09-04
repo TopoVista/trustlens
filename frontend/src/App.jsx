@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import KnowledgeHeader from './components/KnowledgeHeader.jsx';
 import QueryConsole from './components/QueryConsole.jsx';
 import SpecialistCanvas from './components/SpecialistCanvas.jsx';
@@ -10,6 +11,8 @@ import IngestionModal from './components/IngestionModal.jsx';
 import ArchitectureModal from './components/ArchitectureModal.jsx';
 import Footer from './components/Footer.jsx';
 import {
+  setAuthContext,
+  getUserStorageInfo,
   listWorkspaces,
   createWorkspace,
   getWorkspaceHealth,
@@ -30,13 +33,15 @@ import {
   AlertCircle, 
   Layers, 
   Activity,
-  Compass
+  Compass,
+  HardDrive
 } from 'lucide-react';
 
-export default function App() {
+function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = null }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [healthData, setHealthData] = useState(null);
+  const [storageStats, setStorageStats] = useState(null);
   const [discoveries, setDiscoveries] = useState([]);
   const [entitiesData, setEntitiesData] = useState(null);
   const [timelineData, setTimelineData] = useState([]);
@@ -51,25 +56,41 @@ export default function App() {
   const [queryResult, setQueryResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Load initial workspaces & backend status
+  // Sync auth context whenever user changes
   useEffect(() => {
+    const userId = clerkUser?.id || 'default_user';
+    setAuthContext(userId, getToken);
+    
+    // Refresh storage stats and workspaces for this user
     checkHealth().then((ok) => setIsHealthy(ok));
+    refreshStorageStats();
     loadWorkspaces();
-  }, []);
+  }, [clerkUser?.id]);
+
+  const refreshStorageStats = async () => {
+    try {
+      const stats = await getUserStorageInfo();
+      setStorageStats(stats);
+    } catch (err) {
+      console.error('Failed to load user storage stats:', err);
+    }
+  };
 
   const loadWorkspaces = async () => {
     try {
       const list = await listWorkspaces();
       setWorkspaces(list);
-      if (list.length > 0 && !activeWorkspace) {
+      if (list.length > 0) {
         setActiveWorkspace(list[0]);
+      } else {
+        setActiveWorkspace(null);
       }
     } catch (err) {
       console.error('Failed to load workspaces:', err);
     }
   };
 
-  // When active workspace changes, reload all its context
+  // When active workspace changes, reload its context
   useEffect(() => {
     if (!activeWorkspace?.id) return;
     refreshWorkspaceData(activeWorkspace.id);
@@ -90,6 +111,7 @@ export default function App() {
       setEntitiesData(e);
       setTimelineData(t || []);
       setRules(r || []);
+      refreshStorageStats();
     } catch (err) {
       console.error('Error refreshing workspace data:', err);
     }
@@ -100,6 +122,7 @@ export default function App() {
       const newWs = await createWorkspace(name, description);
       setWorkspaces((prev) => [...prev, newWs]);
       setActiveWorkspace(newWs);
+      refreshStorageStats();
     } catch (err) {
       console.error('Failed to create workspace:', err);
     }
@@ -128,7 +151,6 @@ export default function App() {
     try {
       const result = await queryKnowledge(activeWorkspace.id, queryText);
       setQueryResult(result);
-      // Auto-switch to query view if elsewhere
       setActiveView('query');
     } catch (err) {
       console.error('Knowledge query failed:', err);
@@ -140,7 +162,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-trust-bg selection:bg-trust-accent/30 selection:text-white">
-      {/* 1. Header with Workspace Management */}
+      {/* 1. Header with Workspace Management, Clerk Auth & Storage Indicator */}
       <KnowledgeHeader
         workspaces={workspaces}
         activeWorkspace={activeWorkspace}
@@ -148,8 +170,13 @@ export default function App() {
         onCreateWorkspace={handleCreateWorkspace}
         onOpenIngest={() => setIsIngestOpen(true)}
         healthData={healthData}
+        storageStats={storageStats}
         isHealthy={isHealthy}
-        onRefresh={() => activeWorkspace && refreshWorkspaceData(activeWorkspace.id)}
+        isClerkConfigured={isClerkConfigured}
+        onRefresh={() => {
+          if (activeWorkspace) refreshWorkspaceData(activeWorkspace.id);
+          refreshStorageStats();
+        }}
       />
 
       <main className="flex-1 pb-16">
@@ -176,9 +203,17 @@ export default function App() {
             Evidence-Grounded Intelligence Over Your Data
           </h1>
           <p className="text-xs sm:text-sm text-trust-muted mt-2 max-w-xl mx-auto">
-            Ingest personal reports, notes, and research. Decompose claims, detect cross-document contradictions,
-            and query with strict verifiable citation grounding.
+            Each user's knowledge is strictly isolated in dedicated SQLite databases on their local hard disk.
+            Decompose assertions, ground claims against evidence, and discover cross-document contradictions.
           </p>
+
+          {storageStats && (
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-trust-card border border-trust-border text-[11px] font-mono text-gray-300">
+              <HardDrive className="w-3.5 h-3.5 text-trust-cyan" />
+              <span>Host Partition:</span>
+              <span className="text-trust-cyan font-bold">{storageStats.storage_path}</span>
+            </div>
+          )}
         </div>
 
         {/* 3. Query Bar */}
@@ -306,4 +341,18 @@ export default function App() {
       <Footer />
     </div>
   );
+}
+
+function ClerkAppWrapper() {
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  return <AppContent isClerkConfigured={true} clerkUser={user} getToken={getToken} />;
+}
+
+function StandaloneAppWrapper() {
+  return <AppContent isClerkConfigured={false} clerkUser={null} getToken={null} />;
+}
+
+export default function App({ isClerkConfigured = false }) {
+  return isClerkConfigured ? <ClerkAppWrapper /> : <StandaloneAppWrapper />;
 }
