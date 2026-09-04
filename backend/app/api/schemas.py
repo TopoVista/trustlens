@@ -1,7 +1,9 @@
-"""Pydantic schemas for TrustLens API"""
-from typing import List, Optional
+"""Pydantic schemas for TrustLens API and Multi-Agent Extension"""
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
+
+# --- Legacy / Grounding Pipeline Schemas ---
 
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=4000, description="User query string")
@@ -58,3 +60,94 @@ class AnalyzeResponse(BaseModel):
     documents: List[RetrievedDocument]
     verified_claims: List[VerifiedClaim]
     stats: PipelineStats
+
+
+# --- Multi-Agent Vendor Risk Schemas ---
+
+class VendorInput(BaseModel):
+    id: Optional[str] = Field(None, description="Optional vendor ID for benchmark vendors (snowflake, datadog, stripe)")
+    name: Optional[str] = Field("Custom Vendor", description="Vendor legal name")
+    domain: Optional[str] = Field("vendor.internal", description="Vendor domain name")
+    industry: Optional[str] = Field("Software & Technology", description="Industry classification")
+    data_tier: Optional[str] = Field("Tier 2 (High)", description="Data classification tier")
+    data_classified: Optional[List[str]] = Field(default_factory=list)
+    self_attestations: Optional[Dict[str, str]] = Field(default_factory=dict)
+    security_rating: Optional[int] = Field(85, ge=0, le=100)
+    recent_breaches: Optional[int] = Field(0, ge=0)
+    cve_critical_count: Optional[int] = Field(0, ge=0)
+
+
+class VendorAssessmentRequest(BaseModel):
+    vendor: VendorInput = Field(default_factory=VendorInput, description="Vendor profile or ID")
+    query: Optional[str] = Field("", description="Specific audit focus or scope")
+    documents_text: Optional[str] = Field("", description="Raw questionnaire text or policy excerpts")
+    k: Optional[int] = Field(5, ge=1, le=10)
+
+
+class ComplianceFinding(BaseModel):
+    framework: str
+    control_id: str
+    title: str
+    requirement: str
+    status: str  # "Satisfied", "Partial", "Gap"
+    confidence: float
+    matched_evidence: str
+    vendor_name: str
+
+
+class RiskAssessmentResult(BaseModel):
+    risk_score: float
+    risk_tier: str  # "Low", "Moderate", "High", "Critical"
+    inherent_risk: str
+    residual_risk: str
+    factors: Dict[str, Any]
+    recommendation: str
+
+
+class AgentExecutionTrace(BaseModel):
+    agent: str
+    role: str
+    category: str
+    status: str
+    duration_ms: float
+    error: Optional[str] = None
+
+
+class QASeal(BaseModel):
+    auditor: str
+    model: str
+    verified_claims_count: int
+    certified: bool
+
+
+class QAOverview(BaseModel):
+    verified_claims: List[VerifiedClaim] = Field(default_factory=list)
+    faithfulness: float = 100.0
+    hallucination_rate: float = 0.0
+    qa_status: str = "Passed"
+    trust_seal: Optional[QASeal] = None
+
+
+class VendorAssessmentResponse(BaseModel):
+    vendor_profile: Dict[str, Any]
+    parsed_controls: List[Dict[str, Any]]
+    compliance_findings: List[ComplianceFinding]
+    compliance_rate: float
+    risk_assessment: RiskAssessmentResult
+    report_narrative: str
+    qa_verification: QAOverview
+    evidence_documents: List[Dict[str, Any]]
+    agent_traces: List[AgentExecutionTrace]
+    total_latency_ms: float
+
+
+class QARequest(BaseModel):
+    vendor: VendorInput = Field(default_factory=VendorInput)
+    question: str = Field(..., min_length=1, max_length=2000, description="Analyst query about vendor")
+
+
+class QAResponse(BaseModel):
+    question: str
+    answer: str
+    citations: List[str]
+    vendor_name: str

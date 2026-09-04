@@ -7,7 +7,11 @@ from app.api.schemas import (
     RAGResponse,
     AnalyzeResponse,
     HealthResponse,
-    PipelineStats
+    PipelineStats,
+    VendorAssessmentRequest,
+    VendorAssessmentResponse,
+    QARequest,
+    QAResponse
 )
 from app.pipeline.retriever import retrieve
 from app.pipeline.generator import generate_answer
@@ -133,3 +137,54 @@ def analyze_query(request: QueryRequest):
         "verified_claims": verified_claims,
         "stats": stats
     }
+
+
+# --- Multi-Agent Extension Routes ---
+
+@router.post("/api/assess", response_model=VendorAssessmentResponse)
+async def assess_vendor(request: VendorAssessmentRequest):
+    """
+    Multi-Agent Vendor Security & Risk Assessment:
+    Coordinates Ingestion, Parsing, Vector Retrieval, Compliance Mapping,
+    Quantitative Risk Scoring, Findings Generation, and NLI Claim QA.
+    """
+    from app.agents.orchestrator import AgentOrchestrator
+    orchestrator = AgentOrchestrator()
+
+    try:
+        result = await orchestrator.run_assessment(
+            vendor_data=request.vendor.model_dump(),
+            query=request.query,
+            documents_text=request.documents_text
+        )
+        return result
+    except Exception as e:
+        logger.error("Multi-Agent assessment error: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Multi-Agent assessment failed: {str(e)}"
+        )
+
+
+@router.post("/api/ask", response_model=QAResponse)
+async def ask_vendor_question(request: QARequest):
+    """
+    User Q&A Agent Endpoint:
+    Answers analyst questions about vendor posture with verifiable citations.
+    """
+    from app.agents.qa_bot import UserQAAgent
+    qa_agent = UserQAAgent()
+
+    try:
+        result = await qa_agent.answer_question(
+            vendor_profile=request.vendor.model_dump(),
+            question=request.question
+        )
+        return result
+    except Exception as e:
+        logger.error("User Q&A Agent error: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Q&A inquiry failed: {str(e)}"
+        )
+
