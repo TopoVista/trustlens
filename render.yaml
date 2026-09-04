@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: trustlens-api
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: OPENAI_MODEL
+        value: gpt-5.6-luna
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,https://trustlens.vercel.app
+      - key: NLI_MODEL
+        value: cross-encoder/nli-MiniLM2-L6-H768
+      - key: NLI_THRESHOLD
+        value: "0.70"
+      - key: RETRIEVAL_K
+        value: "5"
+      - key: CLAIM_RETRIEVAL_K
+        value: "3"
+      # OPENAI_API_KEY must be set manually in the Render dashboard
