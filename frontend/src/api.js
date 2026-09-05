@@ -1,4 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Resolve API base URL with runtime environment detection.
+// When running on a known production domain, always point at the production
+// backend regardless of what VITE_API_URL was set to at build time.
+const _host = typeof window !== "undefined" ? window.location.hostname : "";
+const _isProdHost = _host.endsWith(".vercel.app") || _host === "trustlens-alpha.vercel.app";
+
+const API_BASE = _isProdHost
+  ? "https://trustlens-api.onrender.com"
+  : (import.meta.env.VITE_API_URL || "http://localhost:8000");
 
 let currentUserId = null;
 let currentTokenGetter = null;
@@ -152,9 +160,11 @@ export async function checkHealth() {
   try {
     const res = await fetch(`${API_BASE}/health`, {
       method: "GET",
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000),
     });
-    return res.ok;
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.status === "ok";
   } catch {
     return false;
   }

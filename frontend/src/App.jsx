@@ -87,6 +87,11 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
       }
     } catch (err) {
       console.error('Failed to load workspaces:', err);
+      setErrorMessage(
+        'Unable to connect to the TrustLens backend. ' +
+        'The production server may be deploying an update — please refresh in a minute. ' +
+        `(${err.message})`
+      );
     }
   };
 
@@ -130,9 +135,20 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 
   const handleIngestDocument = async (docData) => {
     if (!activeWorkspace?.id) return;
-    const res = await uploadDocument(activeWorkspace.id, docData);
-    await refreshWorkspaceData(activeWorkspace.id);
-    return res;
+    setErrorMessage(null);
+    try {
+      const res = await uploadDocument(activeWorkspace.id, docData);
+      await refreshWorkspaceData(activeWorkspace.id);
+      await refreshStorageStats();
+      return res;
+    } catch (err) {
+      console.error('Ingestion failed:', err);
+      const hint = err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')
+        ? ' The backend server may be unavailable — please try again in a moment.'
+        : '';
+      setErrorMessage(`Document ingestion failed: ${err.message}.${hint}`);
+      throw err;
+    }
   };
 
   const handleAddRule = async (ruleData) => {
