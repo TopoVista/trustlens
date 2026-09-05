@@ -1,0 +1,38 @@
+# Local virtual environments (huge — must never enter the image)
+.venv/
+venv/
+env/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets — never bake these into an image
+.env
+.env.*
+!.env.example
+
+# Git metadata (Render builds copy the repo, but be explicit)
+.git/
+.gitignore
+.gitattributes
+
+# Per-user runtime data (created/mounted at runtime on the service disk)
+data/users/
+
+# Raw untracked corpus scrap (preprocessing artifact, not a production asset)
+data/raw_docs/
+
+# Local SQLite databases and WAL sidecars (runtime state, not image content)
+*.db
+*.db-shm
+*.db-wal
+
+# pytest / coverage output
+.coverage
+htmlcov/

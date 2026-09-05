@@ -33,7 +33,8 @@ yarn-error.log*
 # Raw scrap/temporary data
 backend/data/raw_docs/
 backend/data/users/
-backend/data/corpus_embeddings.npy
 *.db
 *.db-shm
 *.db-wal
+# NOTE: backend/data/corpus_embeddings.npy is tracked in git on purpose —
+# it is the persisted vector store required by the lightweight NumPy retriever.
