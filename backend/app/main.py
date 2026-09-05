@@ -29,6 +29,17 @@ allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.st
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Explicit schema initialization for the default (shared) knowledge database.
+    # Per-user databases initialize their own schema lazily on first access
+    # (see UserKnowledgeContext). No heavy models or large datasets are loaded
+    # here — the service starts with only the lightweight Python runtime.
+    try:
+        from app.knowledge.db import ensure_schema
+        ensure_schema()
+        logger.info("Default knowledge schema ensured.")
+    except Exception:
+        logger.exception("Failed to ensure default knowledge schema; "
+                         "endpoints will retry initialization on demand.")
     logger.info("TrustLens API startup. Allowed CORS origins: %s", allowed_origins)
     yield
     logger.info("TrustLens API shutdown.")

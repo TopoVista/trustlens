@@ -24,10 +24,15 @@ def get_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
     return conn
 
 
-def init_knowledge_schema(db_path: Optional[str] = None) -> None:
+def ensure_schema(db_path: Optional[str] = None) -> None:
     """
     Initializes the relational schema for Workspaces, Knowledge Graph,
-    Claim Graph, Evidence Graph, Semantic Rules, and Data Analyst Profiles.
+    Claim Graph, Evidence Graph, Semantic Rules, Chunk Embeddings, and
+    Data Analyst Profiles.
+
+    Must be called explicitly at the application lifecycle point (not imported):
+    - ``app.main`` lifespan startup for the default database.
+    - ``UserKnowledgeContext`` construction for per-user databases.
     """
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
@@ -218,5 +223,5 @@ def init_knowledge_schema(db_path: Optional[str] = None) -> None:
     logger.info("TrustLens Knowledge Schema initialized at %s", db_path or DEFAULT_DB_PATH)
 
 
-# Initialize schema automatically on import
-init_knowledge_schema()
+# Backward-compatible alias for callers that referenced the old name.
+init_knowledge_schema = ensure_schema
