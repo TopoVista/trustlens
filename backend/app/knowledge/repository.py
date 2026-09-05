@@ -1,7 +1,7 @@
 """Data access repository for TrustLens Knowledge and Evidence Graph"""
 import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from app.knowledge.db import get_db_connection
 
 
@@ -112,6 +112,44 @@ class KnowledgeRepository:
                     (workspace_id,)
                 ).fetchall()
             return [dict(r) for r in rows]
+
+    # --- Chunk embeddings (lightweight persistent vector store) ---
+
+    def set_chunk_embedding(
+        self,
+        workspace_id: str,
+        chunk_id: str,
+        embedding_bytes: bytes,
+        dim: int,
+        model: str,
+    ) -> None:
+        """Upserts a persisted embedding vector (float32 bytes) for a chunk."""
+        with self._get_conn() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO chunk_embeddings (chunk_id, workspace_id, embedding, dim, model)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (chunk_id, workspace_id, embedding_bytes, int(dim), model),
+            )
+
+    def get_chunk_embeddings(self, workspace_id: str) -> Dict[str, Tuple[Any, str]]:
+        """Returns {chunk_id: (embedding vector, model_name)} for a workspace.
+
+        Embedding vectors are decoded from float32 BLOBs into numpy arrays so
+        the retrieval layer can use NumPy dot products directly.
+        """
+        import numpy as np
+
+        result: Dict[str, Tuple[Any, str]] = {}
+        with self._get_conn() as conn:
+            rows = conn.execute(
+                "SELECT chunk_id, embedding, model FROM chunk_embeddings WHERE workspace_id = ?",
+                (workspace_id,),
+            ).fetchall()
+        for r in rows:
+            result[r["chunk_id"]] = (np.frombuffer(bytes(r["embedding"]), dtype=np.float32).copy(), r["model"])
+        return result
 
     # --- 3. Entities & Relationships ---
 

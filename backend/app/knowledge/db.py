@@ -190,6 +190,19 @@ def init_knowledge_schema(db_path: Optional[str] = None) -> None:
     );
     """)
 
+    # 11. Chunk Embeddings (lightweight persistent vector store for workspace RAG)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chunk_embeddings (
+        chunk_id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL,
+        embedding BLOB NOT NULL,
+        dim INTEGER NOT NULL,
+        model TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+    );
+    """)
+
     # Indexes for lightning fast workspace-scoped lookups
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_workspace ON documents(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_chunks_workspace ON chunks(workspace_id);")
@@ -198,6 +211,7 @@ def init_knowledge_schema(db_path: Optional[str] = None) -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_evidence_claim ON evidence(claim_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_events_workspace ON events(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_rules_workspace ON semantic_rules(workspace_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_workspace ON chunk_embeddings(workspace_id);")
 
     conn.commit()
     conn.close()

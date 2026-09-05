@@ -33,6 +33,7 @@ yarn-error.log*
 # Raw scrap/temporary data
 backend/data/raw_docs/
 backend/data/users/
+backend/data/corpus_embeddings.npy
 *.db
 *.db-shm
 *.db-wal

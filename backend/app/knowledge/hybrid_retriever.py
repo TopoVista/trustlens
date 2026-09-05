@@ -1,7 +1,19 @@
-"""Hybrid Workspace-Scoped Knowledge Retriever combining Dense Vectors and Relational Graph"""
+"""Hybrid Workspace-Scoped Knowledge Retriever (lightweight, no FAISS).
+
+Combines persisted dense chunk embeddings (stored as BLOBs in SQLite) with
+keyword entity search and relational graph traversal, keeping strict workspace
+isolation.
+
+Chunk embeddings are generated once per chunk (via the configured embedding
+service, OpenAI-backed with an offline fallback) and persisted in the
+``chunk_embeddings`` table. Only the query is embedded per request; previously
+embedded chunks are never re-embedded.
+"""
 import logging
 from typing import Any, Dict, List, Optional
+
 import numpy as np
+
 from app.knowledge.repository import KnowledgeRepository
 from app.models.embeddings import get_embedding_model
 
@@ -23,6 +35,47 @@ class HybridKnowledgeRetriever:
             self._model = get_embedding_model()
         return self._model
 
+    def _ensure_chunk_embeddings(self, workspace_id: str, chunks: List[Dict[str, Any]]) -> np.ndarray:
+        """Return the embedding matrix (chunk order) for the given chunks.
+
+        Missing embeddings are computed once (OpenAI-backed, with deterministic
+        offline fallback) and persisted to the chunk_embeddings table.
+        """
+        stored = self.repo.get_chunk_embeddings(workspace_id)
+        vectors: Dict[str, np.ndarray] = {}
+        pending: List[Dict[str, Any]] = []
+
+        for chunk in chunks:
+            chunk_id = chunk["id"]
+            if chunk_id in stored:
+                vectors[chunk_id] = stored[chunk_id][0]
+            else:
+                pending.append(chunk)
+
+        if pending:
+            model = self._get_model()
+            texts = [p.get("text", "") for p in pending]
+            new_vectors = model.encode(texts, normalize_embeddings=True).astype(np.float32)
+            model_name = model.get_model_name()
+            for chunk, vec in zip(pending, new_vectors):
+                vec32 = np.asarray(vec, dtype=np.float32)
+                self.repo.set_chunk_embedding(
+                    workspace_id,
+                    chunk["id"],
+                    vec32.tobytes(),
+                    int(vec32.shape[0]),
+                    model_name,
+                )
+                vectors[chunk["id"]] = vec32
+            logger.info(
+                "Embedded and persisted %d new chunk vector(s) using '%s'.",
+                len(pending),
+                model_name,
+            )
+
+        matrix = np.vstack([vectors[c["id"]] for c in chunks])
+        return matrix.astype(np.float32)
+
     def retrieve(
         self,
         workspace_id: str,
@@ -38,14 +91,12 @@ class HybridKnowledgeRetriever:
         if not chunks:
             return []
 
-        # 1. Semantic Embedding Retrieval
+        # 1. Semantic vector retrieval (query embedded once, chunks persisted)
         model = self._get_model()
-        query_emb = model.encode([query], normalize_embeddings=True)[0]
-        
-        chunk_texts = [c["text"] for c in chunks]
-        chunk_embs = model.encode(chunk_texts, normalize_embeddings=True)
+        query_emb = model.encode([query], normalize_embeddings=True)[0].astype(np.float32)
+        chunk_embs = self._ensure_chunk_embeddings(workspace_id, chunks)
 
-        # Cosine similarity inner product
+        # Cosine similarity via inner product (normalized vectors)
         sim_scores = np.dot(chunk_embs, query_emb)
 
         # 2. Authority Level Weighting & Keyword Matching

@@ -1,39 +1,42 @@
-"""Retriever module: semantic FAISS retrieval with all-MiniLM-L6-v2"""
-import os
+"""Retriever module: semantic retrieval with persisted vectors + NumPy (no FAISS).
+
+Public interface preserved:
+
+- ``retrieve(query, k=None)``
+- ``retrieve_for_claim(claim, k=None)``
+- ``_load_resources()``
+
+Both functions return a list of ``{"id", "text", "score"}`` dicts exactly as
+before. The corpus embeddings are loaded from ``corpus_embeddings.npy`` and
+built + persisted on first use if missing.
+"""
 import json
 import logging
+import os
 from pathlib import Path
-from typing import List, Dict, Optional
-import faiss
+from typing import Dict, List, Optional
+
 import numpy as np
-from app.models.embeddings import get_embedding_model
+
+from app.models.embeddings import CORPUS_EMBEDDINGS_PATH, get_embedding_model
 
 logger = logging.getLogger("trustlens.retriever")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
-INDEX_PATH = DATA_DIR / "index.faiss"
+INDEX_PATH = DATA_DIR / "index.faiss"  # legacy FAISS artifact, no longer used at runtime
 DOC_STORE_PATH = DATA_DIR / "doc_store.json"
 
 DEFAULT_RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "5"))
 DEFAULT_CLAIM_RETRIEVAL_K = int(os.getenv("CLAIM_RETRIEVAL_K", "3"))
 
-_index = None
-_docs = None
+_index: Optional[np.ndarray] = None
+_docs: Optional[List[Dict]] = None
 
 
 def _load_resources():
+    """Load the document store and the persisted corpus embeddings matrix."""
     global _index, _docs
-
-    if _index is None:
-        if not INDEX_PATH.exists():
-            logger.error("FAISS index not found at %s", INDEX_PATH)
-            raise FileNotFoundError(
-                f"FAISS index file missing at {INDEX_PATH}. "
-                "Ensure backend corpus generation has been executed."
-            )
-        logger.info("Reading FAISS index from %s", INDEX_PATH)
-        _index = faiss.read_index(str(INDEX_PATH))
 
     if _docs is None:
         if not DOC_STORE_PATH.exists():
@@ -46,6 +49,59 @@ def _load_resources():
         with open(DOC_STORE_PATH, "r", encoding="utf-8") as f:
             _docs = json.load(f)
 
+    if _index is None:
+        if CORPUS_EMBEDDINGS_PATH.exists():
+            logger.info("Reading persisted corpus embeddings from %s", CORPUS_EMBEDDINGS_PATH)
+            _index = np.load(CORPUS_EMBEDDINGS_PATH).astype(np.float32)
+        else:
+            model = get_embedding_model()
+            texts = [doc.get("text", "") for doc in _docs]
+            logger.info(
+                "Building persisted corpus embeddings once for %d documents via '%s'...",
+                len(texts),
+                model.get_model_name(),
+            )
+            CORPUS_EMBEDDINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            _index = model.encode(
+                texts, convert_to_numpy=True, normalize_embeddings=True
+            ).astype(np.float32)
+            np.save(CORPUS_EMBEDDINGS_PATH, _index)
+            logger.info("Persisted corpus embeddings to %s (dim=%d)", CORPUS_EMBEDDINGS_PATH, _index.shape[1])
+
+    if len(_index) != len(_docs):
+        logger.warning(
+            "Corpus embedding count (%d) does not match document count (%d). "
+            "Rebuild with scripts/build_corpus_embeddings.py.",
+            len(_index),
+            len(_docs),
+        )
+
+    return _index, _docs
+
+
+def _search(query: str, k: int) -> List[Dict]:
+    """Vector similarity search over the persisted corpus embeddings."""
+    index, docs = _load_resources()
+    model = get_embedding_model()
+    query_embedding = model.encode(
+        [query], convert_to_numpy=True, normalize_embeddings=True
+    ).astype(np.float32).reshape(-1)
+
+    scores = np.dot(index, query_embedding)
+    top_positions = np.argsort(scores)[::-1][:k]
+
+    results: List[Dict] = []
+    for pos in top_positions:
+        if pos < 0 or pos >= len(docs):
+            continue
+        doc = docs[pos]
+        results.append({
+            "id": doc.get("id", f"doc_{int(pos) + 1:03d}"),
+            "text": doc.get("text", ""),
+            "score": round(float(scores[pos]), 4),
+        })
+    return results
+
 
 def retrieve(query: str, k: Optional[int] = None) -> List[Dict]:
     """
@@ -54,31 +110,10 @@ def retrieve(query: str, k: Optional[int] = None) -> List[Dict]:
     if not query or not query.strip():
         return []
 
-    _load_resources()
     limit = k if k is not None else DEFAULT_RETRIEVAL_K
     limit = max(1, min(limit, 10))  # Sanity bounds
 
-    model = get_embedding_model()
-    query_embedding = model.encode(
-        [query],
-        convert_to_numpy=True,
-        normalize_embeddings=True
-    ).astype("float32")
-
-    scores, indices = _index.search(query_embedding, min(limit, len(_docs)))
-
-    results = []
-    for score, idx in zip(scores[0], indices[0]):
-        if idx < 0 or idx >= len(_docs):
-            continue
-        doc = _docs[idx]
-        results.append({
-            "id": doc.get("id", f"doc_{idx:03d}"),
-            "text": doc.get("text", ""),
-            "score": round(float(score), 4)
-        })
-
-    return results
+    return _search(query, limit)
 
 
 def retrieve_for_claim(claim: str, k: Optional[int] = None) -> List[Dict]:
@@ -88,28 +123,7 @@ def retrieve_for_claim(claim: str, k: Optional[int] = None) -> List[Dict]:
     if not claim or not claim.strip():
         return []
 
-    _load_resources()
     limit = k if k is not None else DEFAULT_CLAIM_RETRIEVAL_K
     limit = max(1, min(limit, 10))
 
-    model = get_embedding_model()
-    claim_embedding = model.encode(
-        [claim],
-        convert_to_numpy=True,
-        normalize_embeddings=True
-    ).astype("float32")
-
-    scores, indices = _index.search(claim_embedding, min(limit, len(_docs)))
-
-    results = []
-    for score, idx in zip(scores[0], indices[0]):
-        if idx < 0 or idx >= len(_docs):
-            continue
-        doc = _docs[idx]
-        results.append({
-            "id": doc.get("id", f"doc_{idx:03d}"),
-            "text": doc.get("text", ""),
-            "score": round(float(score), 4)
-        })
-
-    return results
+    return _search(claim, limit)
