@@ -7,6 +7,7 @@ import os
 import re
 import sqlite3
 import logging
+from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, Optional, Any
 
@@ -100,14 +101,18 @@ class UserKnowledgeContext:
         self.storage_dir = get_user_storage_dir(self.user_id)
         self.db_path = get_user_db_path(self.user_id)
 
-        # Initialize user's private SQLite schema on disk
+        # Initialize user's private SQLite schema on disk (cheap, explicit)
         init_knowledge_schema(self.db_path)
 
-        # Instantiate isolated repository and agents
+        # Repository is lightweight (SQLite handle, no models) — keep eager.
         self.repo = KnowledgeRepository(db_path=self.db_path)
         self.repo.ensure_default_workspace()
-        self.ingestion_agent = IngestionKnowledgeAgent(self.repo)
-        self.planner = AnalysisPlanner(self.repo)
+
+        # Heavy orchestrators are constructed lazily on first use so that
+        # endpoints like /health, /documents (read), /claims, /entities never
+        # pay for planner/specialist instantiation (Stage 8 requirement).
+        self._ingestion_agent: Optional[IngestionKnowledgeAgent] = None
+        self._planner: Optional[AnalysisPlanner] = None
 
         logger.info(
             "Initialized user knowledge context for '%s' at: %s",
@@ -115,14 +120,37 @@ class UserKnowledgeContext:
             self.db_path
         )
 
+    @property
+    def ingestion_agent(self) -> IngestionKnowledgeAgent:
+        """Lazily constructed ingestion agent (per-user singleton)."""
+        if self._ingestion_agent is None:
+            self._ingestion_agent = IngestionKnowledgeAgent(self.repo)
+        return self._ingestion_agent
 
-# In-memory registry of active user contexts to prevent recreating pools
-_USER_CONTEXT_CACHE: Dict[str, UserKnowledgeContext] = {}
+    @property
+    def planner(self) -> AnalysisPlanner:
+        """Lazily constructed analysis planner (per-user singleton)."""
+        if self._planner is None:
+            self._planner = AnalysisPlanner(self.repo)
+        return self._planner
+
+
+# In-memory registry of active user contexts (bounded LRU to avoid unbounded
+# growth across many distinct authenticated users on a 512 MB container).
+_USER_CACHE_MAX_SIZE = 64
+_USER_CONTEXT_CACHE: "OrderedDict[str, UserKnowledgeContext]" = OrderedDict()
 
 
 def get_user_context(user_id: Optional[str] = None) -> UserKnowledgeContext:
-    """Thread-safe getter for a user's isolated knowledge context."""
+    """Thread-safe getter for a user's isolated knowledge context (LRU-bounded)."""
     clean_id = sanitize_user_id(user_id)
-    if clean_id not in _USER_CONTEXT_CACHE:
-        _USER_CONTEXT_CACHE[clean_id] = UserKnowledgeContext(clean_id)
-    return _USER_CONTEXT_CACHE[clean_id]
+    ctx = _USER_CONTEXT_CACHE.get(clean_id)
+    if ctx is None:
+        ctx = UserKnowledgeContext(clean_id)
+        _USER_CONTEXT_CACHE[clean_id] = ctx
+        if len(_USER_CONTEXT_CACHE) > _USER_CACHE_MAX_SIZE:
+            # Evict least-recently-used context; its on-disk state is safe.
+            _USER_CONTEXT_CACHE.popitem(last=False)
+    else:
+        _USER_CONTEXT_CACHE.move_to_end(clean_id)
+    return ctx
