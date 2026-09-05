@@ -1,58 +1,83 @@
-"""Claim extraction and conservative normalization"""
+"""Claim extraction and conservative normalization (deterministic, no spaCy).
+
+Sentence splitting is implemented with a lightweight regex sentencizer that
+handles terminal punctuation (``.`` ``!`` ``?``), common abbreviations,
+currency/statistics decimals, and newline-separated claims while preserving the
+previous spaCy-based pipeline's output shape.
+"""
 import re
 import logging
 from typing import List
-import spacy
 
 logger = logging.getLogger("trustlens.claims")
 
-_nlp = None
+# Minimum meaningful claim length (kept identical to previous pipeline).
+_MIN_CLAIM_LEN = 5
+
+# Abbreviations whose trailing period must NOT terminate a sentence.
+# Sorted longest-first so "u.s." outranks "u." etc.
+_ABBREVIATIONS = sorted({
+    "mr.", "mrs.", "ms.", "dr.", "prof.", "sr.", "jr.", "st.", "vs.", "etc.",
+    "e.g.", "i.e.", "cf.", "al.", "inc.", "ltd.", "corp.", "co.", "dept.",
+    "approx.", "est.", "fig.", "no.", "vol.", "ed.", "eds.", "jan.", "feb.",
+    "mar.", "apr.", "jun.", "jul.", "aug.", "sep.", "sept.", "oct.", "nov.",
+    "dec.", "u.s.", "u.k.", "u.s.a.",
+}, key=len, reverse=True)
+
+_ABBR_PLACEHOLDER = "\x00"
 
 
-def _load_nlp():
-    global _nlp
-    if _nlp is None:
-        try:
-            logger.info("Attempting to load spacy 'en_core_web_sm'...")
-            _nlp = spacy.load("en_core_web_sm", disable=["ner", "tagger", "lemmatizer"])
-            logger.info("Loaded spacy 'en_core_web_sm'")
-        except Exception as e:
-            logger.warning("Failed to load 'en_core_web_sm' (%s). Falling back to fast blank English sentencizer.", e)
-            _nlp = spacy.blank("en")
-            _nlp.add_pipe("sentencizer")
-            logger.info("Initialized blank English sentencizer")
+def _protect_abbreviations(text: str) -> str:
+    """Temporarily hide periods in abbreviations to prevent false splits."""
+    for abbr in _ABBREVIATIONS:
+        text = text.replace(abbr, abbr.replace(".", _ABBR_PLACEHOLDER))
+    return text
+
+
+def _restore_abbreviations(text: str) -> str:
+    return text.replace(_ABBR_PLACEHOLDER, ".")
+
+
+def _split_sentences(text: str) -> List[str]:
+    """Split a single logical line into sentences on terminal punctuation.
+
+    The lookbehind ``(?<=[.!?])`` combined with the whitespace requirement
+    means decimals such as ``0.70`` or ``3.5%`` are never split, and protected
+    abbreviations are never treated as sentence boundaries.
+    """
+    if not text or not text.strip():
+        return []
+    protected = _protect_abbreviations(text.strip())
+    parts = re.split(r"(?<=[.!?])\s+", protected)
+    return [_restore_abbreviations(p) for p in parts if p.strip()]
 
 
 def split_into_claims(text: str) -> List[str]:
     """
-    Split generated answer text into sentence-level claims using spaCy.
-    Handles multi-line text, bullet points, and paragraph breaks.
+    Split generated answer text into sentence-level claims.
+
+    Behaves like the previous spaCy sentencizer pipeline:
+    - strips markdown bullet markers from each line (e.g. "- ", "* ", "1. ")
+    - treats newlines and terminal punctuation as claim boundaries
+    - ignores empty fragments and fragments shorter than 5 characters
     """
     if not text or not text.strip():
         return []
 
-    _load_nlp()
+    claims: List[str] = []
 
-    # Pre-clean lines to handle markdown bullet lists nicely
-    cleaned_lines = []
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
+
         # Strip markdown bullets like '-', '*', '1.', '2.'
         line = re.sub(r"^(\d+\.|\*|-)\s+", "", line)
-        if line:
-            cleaned_lines.append(line)
 
-    joined_text = " ".join(cleaned_lines)
-    doc = _nlp(joined_text)
-
-    claims = []
-    for sent in doc.sents:
-        sent_str = sent.text.strip()
-        # Remove stray punctuation or non-informative short fragments
-        if len(sent_str) >= 5:
-            claims.append(sent_str)
+        for sentence in _split_sentences(line):
+            sentence = sentence.strip()
+            if len(sentence) >= _MIN_CLAIM_LEN:
+                claims.append(sentence)
 
     return claims
 
