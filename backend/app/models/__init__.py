@@ -1,4 +1,2 @@
-"""Models package."""
-from . import embeddings, nli
-
-__all__ = ["embeddings", "nli"]
+"""Models package. Submodules are imported explicitly by callers only
+(on-demand) so no heavyweight work happens at package import time."""

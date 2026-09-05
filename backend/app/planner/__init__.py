@@ -1,5 +1,2 @@
-"""TrustLens Planner Package"""
-from app.planner.registry import AgentRegistry
-from app.planner.planner import AnalysisPlanner
-
-__all__ = ["AgentRegistry", "AnalysisPlanner"]
+"""TrustLens Planner Package. Planner and registry are imported on demand
+by workspace services and API routes."""
