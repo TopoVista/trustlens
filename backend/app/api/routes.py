@@ -3,7 +3,7 @@ import sys
 import time
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, Request, status, Depends
 from app.api.auth import AuthUser, get_current_user, get_current_user_context
 from app.knowledge.user_storage import UserKnowledgeContext, get_user_storage_stats
 from app.api.schemas import (
@@ -458,5 +458,217 @@ async def query_workspace(
             detail=f"Knowledge query failed: {str(e)}"
         )
 
+
+
+# --- Dataset Analytics endpoints ----------------------------------------
+
+from app.data.storage import store_upload, get_metadata, get_path, list_datasets
+from app.data.session import get_session
+from app.analytics.profiling import profile_dataset, read_dataset
+from app.analytics.eda import compute_statistics, compute_correlations, detect_outliers_iqr
+from app.analytics.insights import detect_insights
+from app.analytics.charts import suggest_charts
+
+
+def _require_user(user: AuthUser = Depends(get_current_user)) -> AuthUser:
+    return user
+
+
+@router.post("/datasets/upload")
+async def upload_dataset(
+    request: Request,
+    user: AuthUser = Depends(_require_user),
+):
+    """Upload a dataset file (CSV/JSON/Parquet/Excel) for analysis.
+
+    Accepts either:
+      - a raw request body (e.g. ``curl --data-binary @file.csv
+        ".../datasets/upload?filename=file.csv&source_type=csv"``), or
+      - a standard multipart/form-data upload with a ``file`` field
+        (only when the optional ``python-multipart`` package is installed).
+    """
+    content: Optional[bytes] = None
+    filename = "dataset.csv"
+    source_type = "csv"
+    content_type = request.headers.get("content-type", "")
+
+    if content_type.startswith("multipart/form-data"):
+        try:
+            form = await request.form()
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Multipart upload requires the optional 'python-multipart' "
+                       "dependency. Send a raw request body with ?filename= instead.",
+            )
+        upload = form.get("file")
+        if upload is None or isinstance(upload, str):
+            raise HTTPException(status_code=400, detail="Multipart field 'file' is required.")
+        content = await upload.read()
+        filename = form.get("filename") or upload.filename or filename
+        source_type = form.get("source_type") or "csv"
+    else:
+        content = await request.body()
+        filename = request.query_params.get("filename", filename)
+        source_type = request.query_params.get("source_type", "csv")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="No file content provided.")
+    try:
+        dataset_id = store_upload(str(filename), content, str(source_type))
+        session = get_session(dataset_id)
+        return {"dataset_id": dataset_id, "filename": session.filename, "status": "uploaded", "session": session.to_dict()}
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"Storage error: {e}")
+
+
+@router.post("/datasets/profile")
+def profile_uploaded_dataset(
+    dataset_id: str,
+    user: AuthUser = Depends(_require_user),
+):
+    """Profile an uploaded dataset and return structured metadata."""
+    session = get_session(dataset_id)
+    if not session.exists:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    path = session.file_path
+    if not path:
+        raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
+    try:
+        profile = profile_dataset(session.filename, str(path), dataset_id)
+        return profile.to_dict()
+    except ImportError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Profiling error: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Profiling failed: {e}")
+
+
+@router.get("/datasets")
+def list_all_datasets(user: AuthUser = Depends(_require_user)):
+    """List all uploaded datasets."""
+    datasets = list_datasets()
+    return {"datasets": [{"id": k, **v} for k, v in datasets.items()]}
+
+
+@router.get("/datasets/{dataset_id}")
+def get_dataset(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    """Return dataset session metadata."""
+    session = get_session(dataset_id)
+    if not session.exists:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    return session.to_dict()
+
+
+@router.post("/datasets/{dataset_id}/eda")
+def run_eda(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    """Run deterministic EDA on a dataset and return structured statistics."""
+    session = get_session(dataset_id)
+    if not session.exists:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    path = session.file_path
+    if not path:
+        raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
+    try:
+        headers, rows = read_dataset(session.filename, str(path))
+        numeric_cols = []
+        stats = {}
+        correlations = []
+        outliers = {}
+
+        # Compute stats for numeric columns
+        col_values = {}
+        for i, name in enumerate(headers):
+            col_values[name] = [row[i] if i < len(row) else None for row in rows]
+            nums = [v for v in col_values[name] if v is not None and str(v).strip() != ""]
+            try:
+                [float(str(v).replace(",", "")) for v in nums[:10]]
+                numeric_cols.append(name)
+            except (ValueError, TypeError):
+                pass
+
+        for name in numeric_cols:
+            stats[name] = compute_statistics(col_values[name])
+
+        if len(numeric_cols) >= 2:
+            correlations = compute_correlations(headers, rows, numeric_cols)
+
+        for name in numeric_cols:
+            outliers[name] = detect_outliers_iqr(col_values[name])
+
+        return {
+            "dataset_id": dataset_id,
+            "row_count": len(rows),
+            "column_count": len(headers),
+            "numeric_columns": numeric_cols,
+            "statistics": stats,
+            "correlations": correlations,
+            "outliers": outliers,
+        }
+    except ImportError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("EDA error: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"EDA failed: {e}")
+
+
+@router.get("/datasets/{dataset_id}/insights")
+def get_insights(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    """Generate deterministic insights from a dataset."""
+    session = get_session(dataset_id)
+    if not session.exists:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    path = session.file_path
+    if not path:
+        raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
+    try:
+        profile = profile_dataset(session.filename, str(path), dataset_id)
+        headers, rows = read_dataset(session.filename, str(path))
+        insights_list = detect_insights(profile, headers, rows)
+        return {
+            "dataset_id": dataset_id,
+            "insights": [i.to_dict() for i in insights_list],
+            "profile": profile.to_dict(),
+        }
+    except ImportError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Insights error: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Insights failed: {e}")
+
+
+@router.get("/datasets/{dataset_id}/charts")
+def get_charts(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    """Generate chart specifications for a dataset."""
+    session = get_session(dataset_id)
+    if not session.exists:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    path = session.file_path
+    if not path:
+        raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
+    try:
+        profile = profile_dataset(session.filename, str(path), dataset_id)
+        charts = suggest_charts(profile)
+        return {
+            "dataset_id": dataset_id,
+            "charts": [c.to_dict() for c in charts],
+        }
+    except ImportError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Charts error: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Charts failed: {e}")
+
+
+@router.delete("/datasets/{dataset_id}")
+def delete_dataset_endpoint(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    """Delete an uploaded dataset and its stored file."""
+    from app.data.storage import delete_dataset
+    from app.data.session import evict_session
+
+    if not delete_dataset(dataset_id):
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    evict_session(dataset_id)
+    return {"dataset_id": dataset_id, "status": "deleted"}
 
 
