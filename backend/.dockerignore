@@ -36,3 +36,11 @@ data/raw_docs/
 # pytest / coverage output
 .coverage
 htmlcov/
+
+# Stray corrupted files present in the working tree (not source, never ship)
+Only
+Automated
+Encryption
+Multi-AZ
+RDS
+The
