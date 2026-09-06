@@ -79,6 +79,33 @@ def _load_resources():
     return _index, _docs
 
 
+def _rebuild_index() -> np.ndarray:
+    """Re-embed and persist the whole corpus once (self-healing on dim drift)."""
+    global _index
+    model = get_embedding_model()
+    texts = [doc.get("text", "") for doc in (_docs or [])]
+    logger.info(
+        "Rebuilding persisted corpus embeddings for %d documents via '%s'...",
+        len(texts),
+        model.get_model_name(),
+    )
+    CORPUS_EMBEDDINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    matrix = model.encode(
+        texts, convert_to_numpy=True, normalize_embeddings=True
+    ).astype(np.float32)
+    np.save(CORPUS_EMBEDDINGS_PATH, matrix)
+    _index = matrix
+    logger.info(
+        "Persisted rebuilt corpus embeddings to %s (dim=%d)",
+        CORPUS_EMBEDDINGS_PATH,
+        matrix.shape[1],
+    )
+    return matrix
+
+
+_rebuild_lock_held = False
+
+
 def _search(query: str, k: int) -> List[Dict]:
     """Vector similarity search over the persisted corpus embeddings."""
     index, docs = _load_resources()
@@ -86,6 +113,23 @@ def _search(query: str, k: int) -> List[Dict]:
     query_embedding = model.encode(
         [query], convert_to_numpy=True, normalize_embeddings=True
     ).astype(np.float32).reshape(-1)
+
+    if index.ndim == 2 and index.shape[1] != query_embedding.shape[0]:
+        # Dimension drift: the persisted matrix was produced by a different
+        # embedding model (e.g. offline fallback during an API outage, or an
+        # older configured model). Re-embed + persist once so search stays
+        # valid instead of crashing the request.
+        global _rebuild_lock_held
+        if _rebuild_lock_held:
+            logger.error(
+                "Corpus dimension drift persists after rebuild; skipping search."
+            )
+            return []
+        _rebuild_lock_held = True
+        try:
+            index = _rebuild_index()
+        finally:
+            _rebuild_lock_held = False
 
     scores = np.dot(index, query_embedding)
     top_positions = np.argsort(scores)[::-1][:k]

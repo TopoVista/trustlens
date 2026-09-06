@@ -35,11 +35,16 @@ class HybridKnowledgeRetriever:
             self._model = get_embedding_model()
         return self._model
 
-    def _ensure_chunk_embeddings(self, workspace_id: str, chunks: List[Dict[str, Any]]) -> np.ndarray:
+    def _ensure_chunk_embeddings(self, workspace_id: str, chunks: List[Dict[str, Any]], expected_dim: int) -> np.ndarray:
         """Return the embedding matrix (chunk order) for the given chunks.
 
         Missing embeddings are computed once (OpenAI-backed, with deterministic
         offline fallback) and persisted to the chunk_embeddings table.
+
+        Stored vectors whose dimension does not match ``expected_dim`` (e.g.
+        produced by an older model or by the offline fallback during an API
+        outage) are treated as stale, re-embedded once and overwritten, so a
+        dimension drift can never crash a query with a vstack mismatch.
         """
         stored = self.repo.get_chunk_embeddings(workspace_id)
         vectors: Dict[str, np.ndarray] = {}
@@ -48,9 +53,16 @@ class HybridKnowledgeRetriever:
         for chunk in chunks:
             chunk_id = chunk["id"]
             if chunk_id in stored:
-                vectors[chunk_id] = stored[chunk_id][0]
-            else:
-                pending.append(chunk)
+                vec, _model_name = stored[chunk_id]
+                vec = np.asarray(vec, dtype=np.float32).ravel()
+                if vec.shape[0] == expected_dim:
+                    vectors[chunk_id] = vec
+                    continue
+                logger.info(
+                    "Chunk '%s' has stale embedding (dim=%d, expected=%d); re-embedding.",
+                    chunk_id, vec.shape[0], expected_dim,
+                )
+            pending.append(chunk)
 
         if pending:
             model = self._get_model()
@@ -58,7 +70,22 @@ class HybridKnowledgeRetriever:
             new_vectors = model.encode(texts, normalize_embeddings=True).astype(np.float32)
             model_name = model.get_model_name()
             for chunk, vec in zip(pending, new_vectors):
-                vec32 = np.asarray(vec, dtype=np.float32)
+                vec32 = np.asarray(vec, dtype=np.float32).ravel()
+                if vec32.shape[0] != expected_dim:
+                    # Dimension drift (e.g. offline fallback during an API
+                    # outage): fit the vector to the query dimension so
+                    # retrieval stays mathematically valid instead of crashing.
+                    logger.warning(
+                        "Embedding dimension drift (%d != %d) for chunk '%s'; "
+                        "fitting vector to expected dimension.",
+                        vec32.shape[0], expected_dim, chunk["id"],
+                    )
+                    if vec32.shape[0] > expected_dim:
+                        vec32 = vec32[:expected_dim]
+                    else:
+                        vec32 = np.pad(vec32, (0, expected_dim - vec32.shape[0]))
+                    norm = float(np.linalg.norm(vec32)) or 1.0
+                    vec32 = (vec32 / norm).astype(np.float32)
                 self.repo.set_chunk_embedding(
                     workspace_id,
                     chunk["id"],
@@ -94,7 +121,7 @@ class HybridKnowledgeRetriever:
         # 1. Semantic vector retrieval (query embedded once, chunks persisted)
         model = self._get_model()
         query_emb = model.encode([query], normalize_embeddings=True)[0].astype(np.float32)
-        chunk_embs = self._ensure_chunk_embeddings(workspace_id, chunks)
+        chunk_embs = self._ensure_chunk_embeddings(workspace_id, chunks, int(query_emb.shape[0]))
 
         # Cosine similarity via inner product (normalized vectors)
         sim_scores = np.dot(chunk_embs, query_emb)
