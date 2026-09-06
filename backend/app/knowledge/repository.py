@@ -19,12 +19,12 @@ class KnowledgeRepository:
 
     # --- 1. Workspace Operations ---
 
-    def create_workspace(self, name: str, description: str = "") -> Dict[str, Any]:
+    def create_workspace(self, name: str, description: str = "", owner_user_id: str = "") -> Dict[str, Any]:
         workspace_id = f"ws_{uuid.uuid4().hex[:12]}"
         with self._get_conn() as conn:
             conn.execute(
-                "INSERT INTO workspaces (id, name, description) VALUES (?, ?, ?)",
-                (workspace_id, name, description)
+                "INSERT INTO workspaces (id, name, description, owner_user_id) VALUES (?, ?, ?, ?)",
+                (workspace_id, name, description, owner_user_id)
             )
         return self.get_workspace(workspace_id)
 
@@ -33,17 +33,26 @@ class KnowledgeRepository:
             row = conn.execute("SELECT * FROM workspaces WHERE id = ?", (workspace_id,)).fetchone()
             return dict(row) if row else None
 
-    def list_workspaces(self) -> List[Dict[str, Any]]:
+    def list_workspaces(self, owner_user_id: str = "") -> List[Dict[str, Any]]:
+        """List workspaces, optionally filtered by owner."""
         with self._get_conn() as conn:
-            rows = conn.execute("SELECT * FROM workspaces ORDER BY created_at DESC").fetchall()
+            if owner_user_id:
+                rows = conn.execute(
+                    "SELECT * FROM workspaces WHERE owner_user_id = ? ORDER BY created_at DESC",
+                    (owner_user_id,)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM workspaces ORDER BY created_at DESC").fetchall()
             return [dict(r) for r in rows]
 
-    def ensure_default_workspace(self) -> str:
-        """Ensures at least one default workspace exists."""
-        workspaces = self.list_workspaces()
+    def ensure_default_workspace(self, owner_user_id: str = "") -> str:
+        """Ensures at least one default workspace exists for the user."""
+        workspaces = self.list_workspaces(owner_user_id=owner_user_id)
         if workspaces:
             return workspaces[0]["id"]
-        created = self.create_workspace("Personal Knowledge", "Default user intelligence workspace")
+        created = self.create_workspace(
+            "Personal Knowledge", "Default user intelligence workspace", owner_user_id=owner_user_id
+        )
         return created["id"]
 
     # --- 2. Document & Chunk Operations ---

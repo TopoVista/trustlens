@@ -25,4 +25,17 @@ services:
       - key: CORS_ORIGINS
         value: http://localhost:5173,https://trustlens.vercel.app,https://trustlens-alpha.vercel.app
       # OPENAI_API_KEY must be set manually in the Render dashboard
+      # --- Authentication ---
+      # AUTH_MODE=prod requires a valid Bearer JWT on every request.
+      # JWT_SECRET (HS256 shared secret or RS256/ES256 PEM public key) MUST be
+      # set as a secret in the Render dashboard - never commit it to the repo.
+      - key: AUTH_MODE
+        value: prod
+      - key: JWT_ALGORITHMS
+        value: HS256,RS256,ES256
+      # Target issuer/audience for issued tokens (recommended when using Clerk):
+      # - key: JWT_ISSUER
+      #   value: https://<your-clerk-domain>/
+      # - key: JWT_AUDIENCE
+      #   value: <audience-or-empty>
 

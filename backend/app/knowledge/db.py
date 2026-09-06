@@ -43,10 +43,16 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
+        owner_user_id TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    # Migration: add owner_user_id if it doesn't exist (existing databases)
+    cursor.execute("PRAGMA table_info(workspaces)")
+    ws_columns = {row[1] for row in cursor.fetchall()}
+    if "owner_user_id" not in ws_columns:
+        cursor.execute("ALTER TABLE workspaces ADD COLUMN owner_user_id TEXT")
 
     # 2. Documents (User-uploaded files, notes, reports, CSVs)
     cursor.execute("""
