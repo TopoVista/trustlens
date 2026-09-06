@@ -1,4 +1,5 @@
 """FastAPI API routes for TrustLens"""
+import sys
 import time
 import logging
 from typing import List, Optional
@@ -49,6 +50,101 @@ def health_check():
         "status": "ok",
         "version": "2.0.0"
     }
+
+
+@router.get("/health/ready")
+def readiness_check():
+    """
+    Readiness probe: verifies the process can serve requests and that the
+    knowledge database is reachable. Performs no model loading and no
+    external API calls, so it is safe to poll frequently.
+    """
+    db_ok = False
+    try:
+        from app.knowledge.db import ensure_schema, DEFAULT_DB_PATH
+        ensure_schema()
+        db_ok = DEFAULT_DB_PATH.exists()
+    except Exception:  # noqa: BLE001 - readiness must never raise
+        logger.exception("Readiness check: knowledge database unavailable.")
+    return {
+        "status": "ready" if db_ok else "degraded",
+        "version": "2.0.0",
+        "database": db_ok,
+    }
+
+
+def _read_rss_mb() -> Optional[float]:
+    """Best-effort RSS measurement without required external dependencies."""
+    try:  # optional accelerator (dev machines); never required in production
+        import psutil  # type: ignore
+        return psutil.Process().memory_info().rss / (1024 * 1024)
+    except ImportError:
+        pass
+    try:
+        # Linux (Render): parse /proc/self/status
+        with open("/proc/self/status", "r", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return float(line.split()[1]) / 1024.0  # kB -> MB
+    except OSError:
+        pass
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            class _PMC(ctypes.Structure):
+                _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                            ("PeakWorkingSetSize", ctypes.c_size_t),
+                            ("WorkingSetSize", ctypes.c_size_t),
+                            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                            ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                            ("PagefileUsage", ctypes.c_size_t),
+                            ("PeakPagefileUsage", ctypes.c_size_t)]
+
+            pmc = _PMC()
+            pmc.cb = ctypes.sizeof(_PMC)
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            if ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(pmc), pmc.cb):
+                return pmc.WorkingSetSize / (1024 * 1024)
+        except Exception:  # noqa: BLE001
+            return None
+    return None
+
+
+def _read_cgroup_limit_mb() -> Optional[float]:
+    """Read the container memory limit from cgroup v2/v1 (Render enforces it)."""
+    for path in ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                raw = fh.read().strip()
+            if raw and raw != "max":
+                return float(raw) / (1024 * 1024)
+        except OSError:
+            continue
+    return None
+
+
+@router.get("/health/memory")
+def memory_health():
+    """
+    Memory diagnostics for Render Free capacity monitoring.
+    Reports process RSS and the container cgroup limit (when running under
+    Linux containers). Exposes no sensitive configuration.
+    """
+    rss = _read_rss_mb()
+    limit = _read_cgroup_limit_mb()
+    body = {
+        "status": "ok",
+        "rss_mb": round(rss, 1) if rss is not None else None,
+    }
+    if limit is not None:
+        body["limit_mb"] = round(limit, 1)
+        body["usage_percent"] = round((rss / limit) * 100, 1) if rss is not None else None
+        body["status"] = "ok" if (rss is None or rss < limit * 0.85) else "warning"
+    return body
 
 
 @router.post("/answer", response_model=RAGResponse)
