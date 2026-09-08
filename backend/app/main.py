@@ -25,6 +25,9 @@ logger = logging.getLogger("trustlens")
 # Parse CORS origins from environment variable
 cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
 allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+# Optional, narrowly scoped support for Vercel preview deployments. Keep this
+# empty unless preview URLs are desired; exact origins above remain preferred.
+allowed_origin_regex = os.getenv("CORS_ORIGIN_REGEX", "").strip() or None
 
 
 @asynccontextmanager
@@ -55,6 +58,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins if allowed_origins else ["*"],
+    allow_origin_regex=allowed_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

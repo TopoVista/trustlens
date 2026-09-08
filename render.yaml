@@ -24,6 +24,10 @@ services:
         value: "3"
       - key: CORS_ORIGINS
         value: http://localhost:5173,https://trustlens.vercel.app,https://trustlens-alpha.vercel.app
+      # Allows only TrustLens Vercel production/preview URLs in addition to
+      # the exact origins above. Update the prefix if the Vercel project name changes.
+      - key: CORS_ORIGIN_REGEX
+        value: https://trustlens(?:-[a-z0-9-]+)?\.vercel\.app
       # OPENAI_API_KEY must be set manually in the Render dashboard
       # --- Authentication ---
       # AUTH_MODE=prod requires a valid Bearer JWT on every request.

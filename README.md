@@ -200,7 +200,9 @@ VITE_API_URL=http://localhost:8000
    - **Output Directory**: `dist`
 5. Add Environment Variable:
    - `VITE_API_URL`: `https://YOUR-RENDER-SERVICE.onrender.com` *(your live Render backend URL without trailing slash)*
-6. Deploy!
+6. Deploy (or redeploy after changing an environment variable). The frontend
+   reads `VITE_API_URL` at build time; it does not use a hard-coded production
+   API URL.
 
 ---
 

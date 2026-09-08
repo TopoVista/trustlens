@@ -1,12 +1,9 @@
-// Resolve API base URL with runtime environment detection.
-// When running on a known production domain, always point at the production
-// backend regardless of what VITE_API_URL was set to at build time.
-const _host = typeof window !== "undefined" ? window.location.hostname : "";
-const _isProdHost = _host.endsWith(".vercel.app") || _host === "trustlens-alpha.vercel.app";
-
-const API_BASE = _isProdHost
-  ? "https://trustlens-api.onrender.com"
-  : (import.meta.env.VITE_API_URL || "http://localhost:8000");
+// Vite replaces VITE_API_URL while building the bundle. Never hard-code a
+// production backend here: Vercel preview and production builds must point at
+// the endpoint configured for that deployment.
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:8000")
+  .trim()
+  .replace(/\/+$/, "");
 
 let currentUserId = null;
 let currentTokenGetter = null;
@@ -45,7 +42,11 @@ export async function getUserStorageInfo() {
 export async function listWorkspaces() {
   const headers = await buildHeaders();
   const res = await fetch(`${API_BASE}/api/workspaces`, { headers });
-  if (!res.ok) throw new Error("Failed to fetch workspaces");
+  if (!res.ok) {
+    let detail = `Request failed (${res.status})`;
+    try { detail = (await res.json()).detail || detail; } catch {}
+    throw new Error(`Failed to fetch workspaces: ${detail}`);
+  }
   return res.json();
 }
 
