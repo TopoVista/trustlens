@@ -28,11 +28,6 @@ class AgentRegistry:
             "timeline_agent": TimelineAgent(),
             "gap_agent": KnowledgeGapAgent(),
             "data_analyst": DataAnalyst(),
-            "profiler": DataProfiler(),
-            "eda": EDAAnalyst(),
-            "insight_analyst": InsightAnalyst(),
-            "visualization_analyst": VisualizationAnalyst(),
-            "anomaly_analyst": AnomalyAnalyst(),
             "pattern_hunter": PatternHunter(),
             "comparison_agent": DocumentComparisonAgent(),
             "synthesis_agent": SynthesisAgent()
