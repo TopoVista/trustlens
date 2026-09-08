@@ -495,10 +495,22 @@ from app.analytics.profiling import profile_dataset, read_dataset
 from app.analytics.eda import compute_statistics, compute_correlations, detect_outliers_iqr
 from app.analytics.insights import detect_insights
 from app.analytics.charts import suggest_charts
+from app.analytics.query import QueryPlan, QueryPlanError, answer_question, execute_plan
+from app.analytics.advanced import dashboard_spec, detect_anomalies, forecast
+from app.analytics.insights import detect_insights
+from app.agents.coordinator import Coordinator
 
 
 def _require_user(user: AuthUser = Depends(get_current_user)) -> AuthUser:
     return user
+
+
+def _dataset_for_user(dataset_id: str, user: AuthUser):
+    """Return an API dataset only when its owner matches; avoid ID disclosure."""
+    session = get_session(dataset_id)
+    if not session.exists or (session.meta or {}).get("owner_user_id") != user.user_id:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    return session
 
 
 @router.post("/datasets/upload")
@@ -542,7 +554,7 @@ async def upload_dataset(
     if not content:
         raise HTTPException(status_code=400, detail="No file content provided.")
     try:
-        dataset_id = store_upload(str(filename), content, str(source_type))
+        dataset_id = store_upload(str(filename), content, str(source_type), user.user_id)
         session = get_session(dataset_id)
         return {"dataset_id": dataset_id, "filename": session.filename, "status": "uploaded", "session": session.to_dict()}
     except OSError as e:
@@ -555,9 +567,7 @@ def profile_uploaded_dataset(
     user: AuthUser = Depends(_require_user),
 ):
     """Profile an uploaded dataset and return structured metadata."""
-    session = get_session(dataset_id)
-    if not session.exists:
-        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    session = _dataset_for_user(dataset_id, user)
     path = session.file_path
     if not path:
         raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
@@ -574,25 +584,21 @@ def profile_uploaded_dataset(
 @router.get("/datasets")
 def list_all_datasets(user: AuthUser = Depends(_require_user)):
     """List all uploaded datasets."""
-    datasets = list_datasets()
+    datasets = list_datasets(user.user_id)
     return {"datasets": [{"id": k, **v} for k, v in datasets.items()]}
 
 
 @router.get("/datasets/{dataset_id}")
 def get_dataset(dataset_id: str, user: AuthUser = Depends(_require_user)):
     """Return dataset session metadata."""
-    session = get_session(dataset_id)
-    if not session.exists:
-        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    session = _dataset_for_user(dataset_id, user)
     return session.to_dict()
 
 
 @router.post("/datasets/{dataset_id}/eda")
 def run_eda(dataset_id: str, user: AuthUser = Depends(_require_user)):
     """Run deterministic EDA on a dataset and return structured statistics."""
-    session = get_session(dataset_id)
-    if not session.exists:
-        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    session = _dataset_for_user(dataset_id, user)
     path = session.file_path
     if not path:
         raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
@@ -642,9 +648,7 @@ def run_eda(dataset_id: str, user: AuthUser = Depends(_require_user)):
 @router.get("/datasets/{dataset_id}/insights")
 def get_insights(dataset_id: str, user: AuthUser = Depends(_require_user)):
     """Generate deterministic insights from a dataset."""
-    session = get_session(dataset_id)
-    if not session.exists:
-        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    session = _dataset_for_user(dataset_id, user)
     path = session.file_path
     if not path:
         raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
@@ -667,9 +671,7 @@ def get_insights(dataset_id: str, user: AuthUser = Depends(_require_user)):
 @router.get("/datasets/{dataset_id}/charts")
 def get_charts(dataset_id: str, user: AuthUser = Depends(_require_user)):
     """Generate chart specifications for a dataset."""
-    session = get_session(dataset_id)
-    if not session.exists:
-        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    session = _dataset_for_user(dataset_id, user)
     path = session.file_path
     if not path:
         raise HTTPException(status_code=404, detail="Dataset file missing on disk.")
@@ -687,12 +689,79 @@ def get_charts(dataset_id: str, user: AuthUser = Depends(_require_user)):
         raise HTTPException(status_code=500, detail=f"Charts failed: {e}")
 
 
+@router.post("/datasets/{dataset_id}/query")
+async def query_dataset(dataset_id: str, request: Request, user: AuthUser = Depends(_require_user)):
+    """Answer a safe natural-language or structured analytics query.
+
+    JSON plans are validated against the dataset schema; no user-provided code,
+    SQL, shell text, or expressions are ever evaluated.
+    """
+    session = _dataset_for_user(dataset_id, user)
+    if not session.file_path: raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Expected JSON body.")
+    question = str(payload.get("question", "")).strip()
+    try:
+        if "plan" in payload:
+            headers, rows = read_dataset(session.filename, str(session.file_path))
+            plan = QueryPlan.from_dict(payload["plan"])
+            body = {"status":"ok", "interpretation":"Validated structured query plan", "query_plan":plan.to_dict(), "result":execute_plan(plan, headers, rows)}
+        elif question:
+            body = answer_question(session.filename, str(session.file_path), question)
+        else:
+            raise HTTPException(status_code=400, detail="Provide question or plan.")
+        body["dataset_id"] = dataset_id
+        body["activity"] = Coordinator().run_timeline(question or "structured analytics query")
+        return body
+    except QueryPlanError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Dataset query error: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Dataset query failed.")
+
+
+@router.get("/datasets/{dataset_id}/dashboard")
+def get_dataset_dashboard(dataset_id: str, user: AuthUser = Depends(_require_user)):
+    session = _dataset_for_user(dataset_id, user)
+    if not session.file_path: raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+    profile = profile_dataset(session.filename, str(session.file_path), dataset_id)
+    headers, rows = read_dataset(session.filename, str(session.file_path))
+    return {"dataset_id":dataset_id, "dashboard":dashboard_spec(profile.to_dict(), [x.to_dict() for x in detect_insights(profile, headers, rows)], [x.to_dict() for x in suggest_charts(profile)])}
+
+
+@router.post("/datasets/{dataset_id}/forecast")
+async def forecast_dataset(dataset_id: str, request: Request, user: AuthUser = Depends(_require_user)):
+    session = _dataset_for_user(dataset_id, user)
+    if not session.file_path: raise HTTPException(status_code=404, detail="Dataset not found.")
+    payload = await request.json()
+    headers, rows = read_dataset(session.filename, str(session.file_path))
+    target = payload.get("target")
+    if target not in headers: raise HTTPException(status_code=422, detail="A valid numeric target is required.")
+    index = headers.index(target)
+    return {"dataset_id":dataset_id, "target":target, **forecast([r[index] if index < len(r) else None for r in rows], int(payload.get("periods", 3)))}
+
+
+@router.post("/datasets/{dataset_id}/anomalies")
+async def dataset_anomalies(dataset_id: str, request: Request, user: AuthUser = Depends(_require_user)):
+    session = _dataset_for_user(dataset_id, user)
+    if not session.file_path: raise HTTPException(status_code=404, detail="Dataset not found.")
+    payload = await request.json()
+    headers, rows = read_dataset(session.filename, str(session.file_path))
+    column = payload.get("column")
+    if column not in headers: raise HTTPException(status_code=422, detail="A valid column is required.")
+    index = headers.index(column)
+    return {"dataset_id":dataset_id, "column":column, **detect_anomalies([r[index] if index < len(r) else None for r in rows])}
+
+
 @router.delete("/datasets/{dataset_id}")
 def delete_dataset_endpoint(dataset_id: str, user: AuthUser = Depends(_require_user)):
     """Delete an uploaded dataset and its stored file."""
     from app.data.storage import delete_dataset
     from app.data.session import evict_session
 
+    _dataset_for_user(dataset_id, user)
     if not delete_dataset(dataset_id):
         raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
     evict_session(dataset_id)

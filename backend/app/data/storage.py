@@ -33,7 +33,7 @@ def _save_index(index: Dict[str, Any]) -> None:
     _INDEX_PATH.write_text(json.dumps(index, indent=2, default=str), encoding="utf-8")
 
 
-def store_upload(filename: str, content: bytes, source_type: str) -> str:
+def store_upload(filename: str, content: bytes, source_type: str, user_id: Optional[str] = None) -> str:
     """Persist uploaded bytes and return a generated dataset_id."""
     dataset_id = f"ds_{uuid.uuid4().hex[:12]}"
     safe_name = Path(filename).name or "dataset"
@@ -48,6 +48,8 @@ def store_upload(filename: str, content: bytes, source_type: str) -> str:
         "stored_path": str(target),
         "size_bytes": len(content),
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        # Legacy/direct callers may omit this. API-created datasets are always scoped.
+        "owner_user_id": user_id,
     }
     _save_index(index)
     return dataset_id
@@ -65,8 +67,11 @@ def get_path(dataset_id: str) -> Optional[Path]:
     return p if p.exists() else None
 
 
-def list_datasets() -> Dict[str, Any]:
-    return _load_index()
+def list_datasets(user_id: Optional[str] = None) -> Dict[str, Any]:
+    index = _load_index()
+    if user_id is None:
+        return index
+    return {key: value for key, value in index.items() if value.get("owner_user_id") == user_id}
 
 
 def delete_dataset(dataset_id: str) -> bool:

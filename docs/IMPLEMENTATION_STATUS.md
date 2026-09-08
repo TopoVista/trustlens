@@ -11,6 +11,10 @@
 - OpenAI SDK for LLM generation/verification (NO local ML models)
 - NumPy-only lightweight analytics engine (`app/analytics/`)
 - Dataset endpoints: `/datasets/upload`, `/profile`, `/eda`, `/insights`, `/charts`, `/list`, `/{id}`, `DELETE /{id}`
+- Safe dataset questions: `POST /datasets/{id}/query` accepts a limited natural-language question or a validated JSON plan. It never evaluates generated code.
+- Dashboard and opt-in advanced analytics: `GET /datasets/{id}/dashboard`, `POST /datasets/{id}/forecast`, and `POST /datasets/{id}/anomalies` return frontend-renderable JSON only.
+- Existing workspace ingestion/retrieval, evidence provenance, claim links, and contradiction handling remain the Phase 4 implementation under `/api/workspaces/*`.
+- The Phase 5 coordinator/registry foundations stay in-process and emit activity events. Phase 7 adds a lazy OpenAI provider boundary, a safe disabled provider, and optional MCP tool descriptors; no MCP server starts at boot.
 - Legacy RAG: `/answer`, `/analyze`, `/api/assess`, `/api/ask`
 - Personal knowledge: `/api/workspaces/*`, `/api/me`
 - Frontend: React/Vite, Clerk auth, sends `x-user-id`
