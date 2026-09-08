@@ -22,9 +22,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger("trustlens")
 
-# Parse CORS origins from environment variable
-cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
-allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+# Parse CORS origins from environment variable. The stable TrustLens frontend
+# origins are always included as a deployment-safe fallback: a stale Render
+# dashboard value must not silently block the production frontend's browser
+# requests. Additional customer/local origins still come from CORS_ORIGINS.
+_TRUSTLENS_FRONTEND_ORIGINS = {
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://trustlens.vercel.app",
+    "https://trustlens-alpha.vercel.app",
+}
+cors_env = os.getenv("CORS_ORIGINS", "")
+allowed_origins = sorted(
+    _TRUSTLENS_FRONTEND_ORIGINS
+    | {origin.strip().rstrip("/") for origin in cors_env.split(",") if origin.strip()}
+)
 # Optional, narrowly scoped support for Vercel preview deployments. Keep this
 # empty unless preview URLs are desired; exact origins above remain preferred.
 allowed_origin_regex = os.getenv("CORS_ORIGIN_REGEX", "").strip() or None
