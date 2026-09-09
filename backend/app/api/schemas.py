@@ -185,6 +185,8 @@ class DocumentResponse(BaseModel):
     events_extracted: int
     is_tabular: bool
     dataset_profile: Optional[Dict[str, Any]] = None
+    ingestion_status: str = "READY"
+    deduplicated: bool = False
 
 
 class SemanticRuleRequest(BaseModel):

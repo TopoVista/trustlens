@@ -36,6 +36,8 @@ class SynthesisAgent(BaseSpecialist):
         knowledge_gaps = context.get("knowledge_gaps", [])
         entities = context.get("entities", [])
         events = context.get("events", [])
+        comparisons = context.get("comparisons", [])
+        patterns = context.get("patterns", [])
         semantic_rules = context.get("semantic_rules", [])
 
         # Format context for grounded synthesis
@@ -43,6 +45,14 @@ class SynthesisAgent(BaseSpecialist):
         context_str = "\n\n".join(context_passages) if context_passages else "No direct passages retrieved."
 
         rules_str = "\n".join([f"- {r.get('rule_key')}: {r.get('rule_value')}" for r in semantic_rules]) if semantic_rules else "No custom rules defined."
+        comparison_str = "\n".join(
+            f"- {item.get('what_changed', item.get('topic', 'Difference detected'))}"
+            for item in comparisons[:4]
+        ) or "No specialist comparison findings."
+        pattern_str = "\n".join(
+            f"- {item.get('title', item.get('description', 'Pattern detected'))}"
+            for item in patterns[:4]
+        ) or "No specialist discovery findings."
 
         prompt = f"""You are TrustLens's Synthesis Specialist.
 Answer the user question based strictly on the provided workspace evidence.
@@ -52,6 +62,12 @@ Workspace Evidence:
 
 User-Defined Semantic Rules:
 {rules_str}
+
+Specialist Comparison Findings:
+{comparison_str}
+
+Specialist Discovery Findings:
+{pattern_str}
 
 Question:
 {query}
@@ -114,6 +130,8 @@ Contract Rules:
             "unknowns": [g.get("description") for g in knowledge_gaps[:3]],
             "related_knowledge": {
                 "entities": [e.get("name") for e in entities[:6]],
-                "events": [e.get("title") for e in events[:4]]
+                "events": [e.get("title") for e in events[:4]],
+                "comparisons": comparisons[:4],
+                "patterns": patterns[:4],
             }
         }

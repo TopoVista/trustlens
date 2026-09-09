@@ -1,5 +1,6 @@
 """Ingestion and Knowledge Extraction Specialist for TrustLens"""
 import re
+import hashlib
 from typing import Any, Dict, List, Optional
 from app.specialists.base import BaseSpecialist
 from app.specialists.claim_detective import ClaimDetective
@@ -26,10 +27,37 @@ class IngestionKnowledgeAgent(BaseSpecialist):
             capabilities=["document_ingestion", "structural_chunking", "graph_population"]
         )
         self.repo = repo or KnowledgeRepository()
-        self.claim_detective = ClaimDetective()
-        self.entity_agent = EntityAgent()
-        self.timeline_agent = TimelineAgent()
-        self.data_analyst = DataAnalyst()
+        # Construct only the specialists an ingestion actually needs. This
+        # avoids an eager object graph when the context is created for a read
+        # endpoint and keeps the single Render process lightweight.
+        self._claim_detective: Optional[ClaimDetective] = None
+        self._entity_agent: Optional[EntityAgent] = None
+        self._timeline_agent: Optional[TimelineAgent] = None
+        self._data_analyst: Optional[DataAnalyst] = None
+
+    @property
+    def claim_detective(self) -> ClaimDetective:
+        if self._claim_detective is None:
+            self._claim_detective = ClaimDetective()
+        return self._claim_detective
+
+    @property
+    def entity_agent(self) -> EntityAgent:
+        if self._entity_agent is None:
+            self._entity_agent = EntityAgent()
+        return self._entity_agent
+
+    @property
+    def timeline_agent(self) -> TimelineAgent:
+        if self._timeline_agent is None:
+            self._timeline_agent = TimelineAgent()
+        return self._timeline_agent
+
+    @property
+    def data_analyst(self) -> DataAnalyst:
+        if self._data_analyst is None:
+            self._data_analyst = DataAnalyst()
+        return self._data_analyst
 
     async def ingest_content(
         self,
@@ -44,89 +72,125 @@ class IngestionKnowledgeAgent(BaseSpecialist):
         Complete ingestion pipeline: stores doc, creates chunks, extracts entities,
         claims, timeline events, and dataset profiles.
         """
-        # 1. Store document in repository
+        content_hash = hashlib.sha256(raw_content.encode("utf-8")).hexdigest()
+        existing = self.repo.find_document_by_hash(workspace_id, content_hash)
+        if existing:
+            summary = self.repo.get_document_ingestion_summary(workspace_id, existing["id"])
+            if summary:
+                return summary
+
+        # 1. Store a processing record before side effects. This makes a
+        # failed ingestion inspectable and gives retries a clear lifecycle.
         doc_id = self.repo.add_document(
             workspace_id=workspace_id,
             title=title,
             filename=filename,
             file_type=file_type,
             raw_content=raw_content,
-            authority_level=authority_level
+            authority_level=authority_level,
+            content_hash=content_hash,
+            ingestion_status="PROCESSING",
         )
+        try:
+            # 2. Check if tabular data (CSV / TSV)
+            is_tabular = file_type.lower() in {"csv", "tsv"} or ("," in raw_content and "\n" in raw_content and len(raw_content.splitlines()) > 2)
+            dataset_profile = None
 
-        # 2. Check if tabular data (CSV / TSV)
-        is_tabular = file_type.lower() in {"csv", "tsv"} or ("," in raw_content and "\n" in raw_content and len(raw_content.splitlines()) > 2)
-        dataset_profile = None
+            if is_tabular:
+                profile_res = await self.data_analyst.analyze(workspace_id, {"raw_content": raw_content, "filename": filename})
+                if profile_res.get("is_tabular"):
+                    self.repo.add_dataset_profile(
+                        workspace_id=workspace_id,
+                        document_id=doc_id,
+                        row_count=profile_res["row_count"],
+                        col_count=profile_res["col_count"],
+                        columns=profile_res["headers"],
+                        profile=profile_res["columns_profile"],
+                        insights=profile_res["insights"]
+                    )
+                    dataset_profile = profile_res
 
-        if is_tabular:
-            profile_res = await self.data_analyst.analyze(workspace_id, {"raw_content": raw_content, "filename": filename})
-            if profile_res.get("is_tabular"):
-                self.repo.add_dataset_profile(
+            # 3. Structural Chunking with location references
+            chunks_data = self._chunk_document(workspace_id, doc_id, raw_content, is_tabular)
+            self.repo.add_chunks(chunks_data)
+
+            # 4. Extract Entities
+            semantic_rules = self.repo.get_semantic_rules(workspace_id)
+            ent_res = await self.entity_agent.analyze(workspace_id, {"text": raw_content, "semantic_rules": semantic_rules})
+            for ent in ent_res.get("entities", []):
+                self.repo.add_entity(workspace_id, ent["name"], ent["entity_type"], ent.get("aliases"))
+
+            # 5. Extract Claims and link only evidence that actually matches.
+            claim_res = await self.claim_detective.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
+            for c in claim_res.get("claims", []):
+                claim_id = self.repo.add_claim(
                     workspace_id=workspace_id,
+                    statement=c["statement"],
                     document_id=doc_id,
-                    row_count=profile_res["row_count"],
-                    col_count=profile_res["col_count"],
-                    columns=profile_res["headers"],
-                    profile=profile_res["columns_profile"],
-                    insights=profile_res["insights"]
+                    claim_type=c["claim_type"],
+                    confidence=c["confidence"]
                 )
-                dataset_profile = profile_res
+                matching_chunk = self._find_claim_chunk(c["statement"], chunks_data)
+                if matching_chunk:
+                    self.repo.add_evidence(
+                        workspace_id=workspace_id,
+                        claim_id=claim_id,
+                        document_id=doc_id,
+                        chunk_id=matching_chunk.get("id"),
+                        exact_passage=matching_chunk["text"][:250],
+                        location_ref=matching_chunk.get("location_info", "Section 1"),
+                        strength=0.85,
+                    )
 
-        # 3. Structural Chunking with location references
-        chunks_data = self._chunk_document(workspace_id, doc_id, raw_content, is_tabular)
-        self.repo.add_chunks(chunks_data)
-
-        # 4. Extract Entities
-        semantic_rules = self.repo.get_semantic_rules(workspace_id)
-        ent_res = await self.entity_agent.analyze(workspace_id, {"text": raw_content, "semantic_rules": semantic_rules})
-        for ent in ent_res.get("entities", []):
-            self.repo.add_entity(workspace_id, ent["name"], ent["entity_type"], ent.get("aliases"))
-
-        # 5. Extract Claims
-        claim_res = await self.claim_detective.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
-        for c in claim_res.get("claims", []):
-            claim_id = self.repo.add_claim(
-                workspace_id=workspace_id,
-                statement=c["statement"],
-                document_id=doc_id,
-                claim_type=c["claim_type"],
-                confidence=c["confidence"]
-            )
-            # Link to first matching chunk as immediate evidence
-            if chunks_data:
-                matching_chunk = next((chk for chk in chunks_data if c["statement"][:30] in chk["text"]), chunks_data[0])
-                self.repo.add_evidence(
+            # 6. Extract Timeline Events
+            time_res = await self.timeline_agent.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
+            for evt in time_res.get("events", []):
+                self.repo.add_event(
                     workspace_id=workspace_id,
-                    claim_id=claim_id,
+                    title=evt["title"],
+                    date_str=evt["date_str"],
+                    description=evt["description"],
                     document_id=doc_id,
-                    chunk_id=matching_chunk.get("id"),
-                    exact_passage=matching_chunk["text"][:250],
-                    location_ref=matching_chunk.get("location_info", "Section 1"),
-                    strength=0.85
+                    timestamp_val=evt["timestamp_val"],
                 )
 
-        # 6. Extract Timeline Events
-        time_res = await self.timeline_agent.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
-        for evt in time_res.get("events", []):
-            self.repo.add_event(
-                workspace_id=workspace_id,
-                title=evt["title"],
-                date_str=evt["date_str"],
-                description=evt["description"],
-                document_id=doc_id,
-                timestamp_val=evt["timestamp_val"]
-            )
+            self.repo.update_document_ingestion_status(workspace_id, doc_id, "READY")
+            return {
+                "document_id": doc_id,
+                "title": title,
+                "chunks_count": len(chunks_data),
+                "claims_extracted": len(claim_res.get("claims", [])),
+                "entities_extracted": len(ent_res.get("entities", [])),
+                "events_extracted": len(time_res.get("events", [])),
+                "is_tabular": is_tabular,
+                "dataset_profile": dataset_profile,
+                "ingestion_status": "READY",
+                "deduplicated": False,
+            }
+        except Exception as exc:
+            self.repo.update_document_ingestion_status(workspace_id, doc_id, "FAILED", str(exc)[:500])
+            raise
 
-        return {
-            "document_id": doc_id,
-            "title": title,
-            "chunks_count": len(chunks_data),
-            "claims_extracted": len(claim_res.get("claims", [])),
-            "entities_extracted": len(ent_res.get("entities", [])),
-            "events_extracted": len(time_res.get("events", [])),
-            "is_tabular": is_tabular,
-            "dataset_profile": dataset_profile
-        }
+    @staticmethod
+    def _find_claim_chunk(statement: str, chunks: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Return a chunk only when it carries meaningful lexical support.
+
+        This deliberately avoids assigning the first chunk as fabricated
+        evidence when no chunk actually supports a claim.
+        """
+        claim_tokens = set(re.findall(r"[a-z0-9]+", statement.lower()))
+        if not claim_tokens:
+            return None
+        best, best_score = None, 0.0
+        for chunk in chunks:
+            text = chunk.get("text", "")
+            if statement.lower() in text.lower():
+                return chunk
+            tokens = set(re.findall(r"[a-z0-9]+", text.lower()))
+            score = len(claim_tokens & tokens) / len(claim_tokens)
+            if score > best_score:
+                best, best_score = chunk, score
+        return best if best_score >= 0.7 else None
 
     def _chunk_document(self, workspace_id: str, doc_id: str, content: str, is_tabular: bool) -> List[Dict[str, Any]]:
         """Splits content into coherent structural chunks with location coordinates."""

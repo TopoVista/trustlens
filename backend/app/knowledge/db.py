@@ -65,10 +65,23 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
         raw_content TEXT,
         authority_level TEXT DEFAULT 'MEDIUM',
         metadata_json TEXT DEFAULT '{}',
+        content_hash TEXT,
+        ingestion_status TEXT NOT NULL DEFAULT 'READY',
+        ingestion_error TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
     );
     """)
+    # Additive migrations preserve existing user databases created before the
+    # ingestion lifecycle and content-deduplication fields were introduced.
+    cursor.execute("PRAGMA table_info(documents)")
+    doc_columns = {row[1] for row in cursor.fetchall()}
+    if "content_hash" not in doc_columns:
+        cursor.execute("ALTER TABLE documents ADD COLUMN content_hash TEXT")
+    if "ingestion_status" not in doc_columns:
+        cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_status TEXT NOT NULL DEFAULT 'READY'")
+    if "ingestion_error" not in doc_columns:
+        cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_error TEXT")
 
     # 3. Document Chunks (Precise passage coordinates)
     cursor.execute("""
@@ -216,6 +229,7 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
 
     # Indexes for lightning fast workspace-scoped lookups
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_workspace ON documents(workspace_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_workspace_hash ON documents(workspace_id, content_hash);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_chunks_workspace ON chunks(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_entities_workspace ON entities(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_claims_workspace ON claims(workspace_id);")

@@ -13,6 +13,7 @@ built + persisted on first use if missing.
 import json
 import logging
 import os
+import threading
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -103,7 +104,7 @@ def _rebuild_index() -> np.ndarray:
     return matrix
 
 
-_rebuild_lock_held = False
+_rebuild_lock = threading.Lock()
 
 
 def _search(query: str, k: int) -> List[Dict]:
@@ -119,17 +120,19 @@ def _search(query: str, k: int) -> List[Dict]:
         # embedding model (e.g. offline fallback during an API outage, or an
         # older configured model). Re-embed + persist once so search stays
         # valid instead of crashing the request.
-        global _rebuild_lock_held
-        if _rebuild_lock_held:
+        # A free-tier service has one worker, but concurrent requests can still
+        # arrive on that worker. Only one request may persist a full corpus
+        # rebuild; followers reload the rebuilt matrix rather than racing to
+        # overwrite the same file.
+        if not _rebuild_lock.acquire(blocking=False):
             logger.error(
-                "Corpus dimension drift persists after rebuild; skipping search."
+                "Corpus dimension rebuild is already in progress; skipping search."
             )
             return []
-        _rebuild_lock_held = True
         try:
             index = _rebuild_index()
         finally:
-            _rebuild_lock_held = False
+            _rebuild_lock.release()
 
     scores = np.dot(index, query_embedding)
     top_positions = np.argsort(scores)[::-1][:k]

@@ -222,3 +222,46 @@ def test_api_me_storage_isolated_per_user_header():
     ids_b = {w["id"] for w in ws_b}
     assert ids_a and ids_b
     assert ids_a.isdisjoint(ids_b)
+
+
+def test_ingestion_deduplicates_same_content_and_tracks_ready_status():
+    ctx = get_user_context(USER_ALPHA)
+    workspace_id = ctx.repo.ensure_default_workspace()
+    kwargs = {
+        "workspace_id": workspace_id,
+        "title": "Duplicate Safe Document",
+        "filename": "duplicate.txt",
+        "raw_content": "Revenue increased in Q3 and the report was approved.",
+        "file_type": "text",
+    }
+    first = asyncio.run(ctx.ingestion_agent.ingest_content(**kwargs))
+    second = asyncio.run(ctx.ingestion_agent.ingest_content(**kwargs))
+
+    assert first["ingestion_status"] == "READY"
+    assert first["deduplicated"] is False
+    assert second["document_id"] == first["document_id"]
+    assert second["deduplicated"] is True
+    assert len(ctx.repo.get_documents(workspace_id)) == 1
+
+
+def test_failed_ingestion_is_recorded_and_can_be_retried(monkeypatch):
+    ctx = get_user_context(USER_ALPHA)
+    workspace_id = ctx.repo.ensure_default_workspace()
+
+    async def fail_entities(*_args, **_kwargs):
+        raise RuntimeError("entity extraction failed")
+
+    monkeypatch.setattr(ctx.ingestion_agent.entity_agent, "analyze", fail_entities)
+    kwargs = {
+        "workspace_id": workspace_id,
+        "title": "Retry Document",
+        "filename": "retry.txt",
+        "raw_content": "A document that must not be silently marked ready.",
+        "file_type": "text",
+    }
+    with pytest.raises(RuntimeError, match="entity extraction failed"):
+        asyncio.run(ctx.ingestion_agent.ingest_content(**kwargs))
+
+    doc = ctx.repo.get_documents(workspace_id)[0]
+    assert doc["ingestion_status"] == "FAILED"
+    assert "entity extraction failed" in doc["ingestion_error"]

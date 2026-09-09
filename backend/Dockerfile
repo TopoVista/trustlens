@@ -23,6 +23,6 @@ EXPOSE 10000
 
 # Render injects $PORT; default to 10000 for local runs.
 # Single uvicorn process, no worker duplication.
-CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD ["sh", "-c", "exec python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
 
 

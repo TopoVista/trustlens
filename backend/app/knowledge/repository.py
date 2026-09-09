@@ -65,19 +65,99 @@ class KnowledgeRepository:
         file_type: str,
         raw_content: str,
         authority_level: str = "MEDIUM",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        content_hash: Optional[str] = None,
+        ingestion_status: str = "READY",
     ) -> str:
         doc_id = f"doc_{uuid.uuid4().hex[:12]}"
         meta_str = json.dumps(metadata or {})
         with self._get_conn() as conn:
             conn.execute(
                 """
-                INSERT INTO documents (id, workspace_id, title, filename, file_type, raw_content, authority_level, metadata_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO documents (
+                    id, workspace_id, title, filename, file_type, raw_content,
+                    authority_level, metadata_json, content_hash, ingestion_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (doc_id, workspace_id, title, filename, file_type, raw_content, authority_level, meta_str)
+                (
+                    doc_id, workspace_id, title, filename, file_type, raw_content,
+                    authority_level, meta_str, content_hash, ingestion_status,
+                )
             )
         return doc_id
+
+    def find_document_by_hash(self, workspace_id: str, content_hash: str) -> Optional[Dict[str, Any]]:
+        """Find a reusable ingestion result without crossing workspaces.
+
+        Failed work is deliberately not reused: retrying the same content must
+        be able to start a fresh ingestion attempt.
+        """
+        if not content_hash:
+            return None
+        with self._get_conn() as conn:
+            row = conn.execute(
+                """
+                SELECT * FROM documents
+                WHERE workspace_id = ? AND content_hash = ?
+                  AND COALESCE(ingestion_status, 'READY') != 'FAILED'
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                (workspace_id, content_hash),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def update_document_ingestion_status(
+        self, workspace_id: str, doc_id: str, status: str, error: Optional[str] = None
+    ) -> None:
+        if status not in {"PROCESSING", "READY", "FAILED"}:
+            raise ValueError(f"Unsupported ingestion status: {status}")
+        with self._get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE documents
+                SET ingestion_status = ?, ingestion_error = ?
+                WHERE workspace_id = ? AND id = ?
+                """,
+                (status, error, workspace_id, doc_id),
+            )
+
+    def get_document_ingestion_summary(self, workspace_id: str, doc_id: str) -> Optional[Dict[str, Any]]:
+        """Return a compact, JSON-safe summary for a prior ingestion."""
+        document = self.get_document(workspace_id, doc_id)
+        if document is None:
+            return None
+        with self._get_conn() as conn:
+            chunks_count = conn.execute(
+                "SELECT COUNT(*) FROM chunks WHERE workspace_id = ? AND document_id = ?",
+                (workspace_id, doc_id),
+            ).fetchone()[0]
+            claims_count = conn.execute(
+                "SELECT COUNT(*) FROM claims WHERE workspace_id = ? AND document_id = ?",
+                (workspace_id, doc_id),
+            ).fetchone()[0]
+            events_count = conn.execute(
+                "SELECT COUNT(*) FROM events WHERE workspace_id = ? AND document_id = ?",
+                (workspace_id, doc_id),
+            ).fetchone()[0]
+            profile_row = conn.execute(
+                "SELECT profile_json FROM dataset_profiles WHERE workspace_id = ? AND document_id = ? ORDER BY created_at DESC LIMIT 1",
+                (workspace_id, doc_id),
+            ).fetchone()
+        profile = json.loads(profile_row[0]) if profile_row else None
+        return {
+            "document_id": doc_id,
+            "title": document["title"],
+            "chunks_count": chunks_count,
+            "claims_extracted": claims_count,
+            # Entities are workspace-level de-duplicated graph records, so a
+            # document-specific count is intentionally not inferred.
+            "entities_extracted": 0,
+            "events_extracted": events_count,
+            "is_tabular": document.get("file_type", "").lower() in {"csv", "tsv"},
+            "dataset_profile": profile,
+            "ingestion_status": document.get("ingestion_status", "READY"),
+            "deduplicated": True,
+        }
 
     def add_chunks(self, chunks_data: List[Dict[str, Any]]) -> None:
         """Batch inserts document chunks with precise location references."""
