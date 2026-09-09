@@ -15,6 +15,7 @@ import {
   Bookmark,
   Layers
 } from 'lucide-react';
+import { toConfidencePercent } from '../utils/confidence';
 
 export default function AnswerContractPanel({ data }) {
   if (!data) return null;
@@ -38,7 +39,7 @@ export default function AnswerContractPanel({ data }) {
   const [activeTab, setActiveTab] = useState('answer'); // 'answer' | 'claims' | 'evidence' | 'contradictions'
 
   // Confidence color
-  const confPct = Math.round(confidence * 100);
+  const confPct = toConfidencePercent(confidence);
   const confColor = confPct >= 80 ? 'text-trust-green' : confPct >= 60 ? 'text-trust-amber' : 'text-trust-red';
   const confBg = confPct >= 80 ? 'bg-trust-green/20 border-trust-green/40' : confPct >= 60 ? 'bg-trust-amber/20 border-trust-amber/40' : 'bg-trust-red/20 border-trust-red/40';
 
