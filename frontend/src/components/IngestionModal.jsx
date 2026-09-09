@@ -182,10 +182,10 @@ export default function IngestionModal({
               </p>
               <div className="flex gap-3 pt-1 text-[11px] font-mono">
                 <span className="bg-trust-card px-2 py-0.5 rounded border border-trust-green/30">
-                  ID: {ingestionResult.id}
+                  ID: {ingestionResult.document_id || ingestionResult.id || 'Unavailable'}
                 </span>
                 <span className="bg-trust-card px-2 py-0.5 rounded border border-trust-green/30">
-                  Authority: {ingestionResult.authority_level}
+                  Authority: {ingestionResult.authority_level || authorityLevel}
                 </span>
               </div>
             </div>

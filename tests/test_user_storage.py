@@ -239,9 +239,37 @@ def test_ingestion_deduplicates_same_content_and_tracks_ready_status():
 
     assert first["ingestion_status"] == "READY"
     assert first["deduplicated"] is False
+    assert first["authority_level"] == "MEDIUM"
     assert second["document_id"] == first["document_id"]
     assert second["deduplicated"] is True
+    assert second["authority_level"] == "MEDIUM"
     assert len(ctx.repo.get_documents(workspace_id)) == 1
+
+
+def test_api_upload_returns_document_identity_and_authority():
+    """The success modal needs both fields from the public response contract."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    ctx = get_user_context(USER_ALPHA)
+    workspace_id = ctx.repo.ensure_default_workspace()
+    client = TestClient(app)
+    response = client.post(
+        f"/api/workspaces/{workspace_id}/documents",
+        headers={"x-user-id": USER_ALPHA},
+        json={
+            "title": "Authority Contract",
+            "filename": "authority.txt",
+            "file_type": "text",
+            "raw_content": "This is the authoritative document used for response contract testing.",
+            "authority_level": "OFFICIAL",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["document_id"].startswith("doc_")
+    assert body["authority_level"] == "OFFICIAL"
 
 
 def test_failed_ingestion_is_recorded_and_can_be_retried(monkeypatch):

@@ -179,6 +179,7 @@ class DocumentUploadRequest(BaseModel):
 class DocumentResponse(BaseModel):
     document_id: str
     title: str
+    authority_level: str
     chunks_count: int
     claims_extracted: int
     entities_extracted: int

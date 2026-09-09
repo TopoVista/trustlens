@@ -158,6 +158,7 @@ class IngestionKnowledgeAgent(BaseSpecialist):
             return {
                 "document_id": doc_id,
                 "title": title,
+                "authority_level": authority_level,
                 "chunks_count": len(chunks_data),
                 "claims_extracted": len(claim_res.get("claims", [])),
                 "entities_extracted": len(ent_res.get("entities", [])),

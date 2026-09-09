@@ -147,6 +147,7 @@ class KnowledgeRepository:
         return {
             "document_id": doc_id,
             "title": document["title"],
+            "authority_level": document.get("authority_level", "MEDIUM"),
             "chunks_count": chunks_count,
             "claims_extracted": claims_count,
             # Entities are workspace-level de-duplicated graph records, so a
