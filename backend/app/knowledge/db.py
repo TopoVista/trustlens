@@ -1,20 +1,100 @@
-"""Embedded SQLite Relational Knowledge & Evidence Graph Engine for TrustLens"""
+"""Portable relational storage for TrustLens knowledge workspaces.
+
+SQLite is used for local development.  In deployment, setting ``DATABASE_URL``
+switches the same repository API to Postgres so Render restarts cannot erase
+user documents.
+"""
 import os
 import sqlite3
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger("trustlens.knowledge.db")
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "trustlens_knowledge.db"
 
 
-def get_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
+def using_postgres() -> bool:
+    """Whether durable Postgres storage is configured for this process."""
+    return bool(os.getenv("DATABASE_URL", "").strip())
+
+
+class _PostgresRow(dict):
+    """Dict-like row with SQLite-compatible numeric indexing."""
+
+    def __init__(self, columns: list[str], values: tuple[Any, ...]):
+        super().__init__(zip(columns, values))
+        self._values = values
+
+    def __getitem__(self, key: Any) -> Any:
+        return self._values[key] if isinstance(key, int) else super().__getitem__(key)
+
+
+class _PostgresCursor:
+    def __init__(self, cursor: Any):
+        self._cursor = cursor
+        self._columns: list[str] = []
+
+    def execute(self, query: str, params: Optional[tuple[Any, ...]] = None):
+        # Repository queries use SQLite qmark parameters. None of the SQL
+        # strings contain literal question marks, so this is a safe dialect
+        # translation for the shared repository API.
+        self._cursor.execute(query.replace("?", "%s"), params or ())
+        self._columns = [column.name for column in self._cursor.description or []]
+        return self
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        return _PostgresRow(self._columns, row) if row is not None else None
+
+    def fetchall(self):
+        return [_PostgresRow(self._columns, row) for row in self._cursor.fetchall()]
+
+
+class _PostgresConnection:
+    """Small compatibility layer used only when DATABASE_URL is configured."""
+
+    def __init__(self, connection: Any):
+        self._connection = connection
+
+    def cursor(self):
+        return _PostgresCursor(self._connection.cursor())
+
+    def execute(self, query: str, params: Optional[tuple[Any, ...]] = None):
+        return self.cursor().execute(query, params)
+
+    def commit(self) -> None:
+        self._connection.commit()
+
+    def close(self) -> None:
+        self._connection.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, _exc, _traceback) -> bool:
+        if exc_type is None:
+            self._connection.commit()
+        else:
+            self._connection.rollback()
+        self._connection.close()
+        return False
+
+
+def get_db_connection(db_path: Optional[str] = None):
     """
     Returns a thread-safe connection to the embedded SQLite database
     with foreign keys and dict-like row factories enabled.
     """
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    if database_url:
+        try:
+            import psycopg
+        except ImportError as exc:  # pragma: no cover - deployment configuration guard
+            raise RuntimeError("DATABASE_URL is configured but psycopg is not installed.") from exc
+        return _PostgresConnection(psycopg.connect(database_url, connect_timeout=10))
+
     path = db_path or os.getenv("TRUSTLENS_DB_PATH", str(DEFAULT_DB_PATH))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     conn = sqlite3.connect(path, timeout=30.0, check_same_thread=False)
@@ -48,11 +128,15 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
-    # Migration: add owner_user_id if it doesn't exist (existing databases)
-    cursor.execute("PRAGMA table_info(workspaces)")
-    ws_columns = {row[1] for row in cursor.fetchall()}
-    if "owner_user_id" not in ws_columns:
-        cursor.execute("ALTER TABLE workspaces ADD COLUMN owner_user_id TEXT")
+    # Additive migrations preserve existing local SQLite databases. Postgres
+    # supports IF NOT EXISTS directly; SQLite needs a lightweight column probe.
+    if using_postgres():
+        cursor.execute("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS owner_user_id TEXT")
+    else:
+        cursor.execute("PRAGMA table_info(workspaces)")
+        ws_columns = {row[1] for row in cursor.fetchall()}
+        if "owner_user_id" not in ws_columns:
+            cursor.execute("ALTER TABLE workspaces ADD COLUMN owner_user_id TEXT")
 
     # 2. Documents (User-uploaded files, notes, reports, CSVs)
     cursor.execute("""
@@ -74,14 +158,19 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
     """)
     # Additive migrations preserve existing user databases created before the
     # ingestion lifecycle and content-deduplication fields were introduced.
-    cursor.execute("PRAGMA table_info(documents)")
-    doc_columns = {row[1] for row in cursor.fetchall()}
-    if "content_hash" not in doc_columns:
-        cursor.execute("ALTER TABLE documents ADD COLUMN content_hash TEXT")
-    if "ingestion_status" not in doc_columns:
-        cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_status TEXT NOT NULL DEFAULT 'READY'")
-    if "ingestion_error" not in doc_columns:
-        cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_error TEXT")
+    if using_postgres():
+        cursor.execute("ALTER TABLE documents ADD COLUMN IF NOT EXISTS content_hash TEXT")
+        cursor.execute("ALTER TABLE documents ADD COLUMN IF NOT EXISTS ingestion_status TEXT NOT NULL DEFAULT 'READY'")
+        cursor.execute("ALTER TABLE documents ADD COLUMN IF NOT EXISTS ingestion_error TEXT")
+    else:
+        cursor.execute("PRAGMA table_info(documents)")
+        doc_columns = {row[1] for row in cursor.fetchall()}
+        if "content_hash" not in doc_columns:
+            cursor.execute("ALTER TABLE documents ADD COLUMN content_hash TEXT")
+        if "ingestion_status" not in doc_columns:
+            cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_status TEXT NOT NULL DEFAULT 'READY'")
+        if "ingestion_error" not in doc_columns:
+            cursor.execute("ALTER TABLE documents ADD COLUMN ingestion_error TEXT")
 
     # 3. Document Chunks (Precise passage coordinates)
     cursor.execute("""
@@ -219,7 +308,7 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
     CREATE TABLE IF NOT EXISTS chunk_embeddings (
         chunk_id TEXT PRIMARY KEY,
         workspace_id TEXT NOT NULL,
-        embedding BLOB NOT NULL,
+        embedding BYTEA NOT NULL,
         dim INTEGER NOT NULL,
         model TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

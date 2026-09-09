@@ -76,7 +76,7 @@ export default function KnowledgeHeader({
               </span>
             </div>
             <p className="text-[10px] text-trust-muted font-mono hidden md:block">
-              Per-User Local Disk Isolation
+              Per-User Workspace Isolation
             </p>
           </div>
         </div>
@@ -122,7 +122,9 @@ export default function KnowledgeHeader({
             <HardDrive className="w-3.5 h-3.5 text-trust-accent" />
             <span className="hidden lg:inline">Disk:</span>
             <span className="text-trust-cyan font-semibold">
-              {storageStats ? `${storageStats.total_kb} KB` : 'Local'}
+              {storageStats?.storage_backend === 'postgres'
+                ? 'Durable DB'
+                : storageStats ? `${storageStats.total_kb} KB` : 'Storage'}
             </span>
           </button>
 
@@ -194,10 +196,10 @@ export default function KnowledgeHeader({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">
-                    Personal Hard Disk Storage
+                    Personal Knowledge Storage
                   </h3>
                   <p className="text-xs text-trust-muted font-mono">
-                    Strict multi-tenant disk isolation on host machine
+                    Isolated workspace storage for the signed-in user
                   </p>
                 </div>
               </div>
@@ -212,7 +214,7 @@ export default function KnowledgeHeader({
             <div className="space-y-3 font-mono text-xs">
               <div className="p-3 rounded-xl bg-trust-surface border border-trust-border space-y-1.5">
                 <span className="text-[10px] text-trust-muted uppercase block">
-                  Isolated Hard Disk Path
+                  Storage Backend
                 </span>
                 <span className="text-trust-cyan break-all text-[11px]">
                   {storageStats?.storage_path || 'backend/data/users/default_user'}
@@ -238,6 +240,16 @@ export default function KnowledgeHeader({
                     {storageStats?.files_count || 0}
                   </span>
                 </div>
+              </div>
+
+              <div className={`p-3 rounded-xl border text-[11px] font-sans ${
+                storageStats?.durable
+                  ? 'bg-trust-green-bg border-trust-green/30 text-trust-green'
+                  : 'bg-trust-amber-bg border-trust-amber/30 text-trust-amber'
+              }`}>
+                {storageStats?.durable
+                  ? 'Durable storage is enabled. Documents survive Render restarts and future sign-ins.'
+                  : 'Temporary local storage is active. Configure DATABASE_URL with Render Postgres to retain documents across Render restarts.'}
               </div>
 
               {!isClerkConfigured && (

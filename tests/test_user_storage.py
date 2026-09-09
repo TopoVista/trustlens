@@ -246,6 +246,29 @@ def test_ingestion_deduplicates_same_content_and_tracks_ready_status():
     assert len(ctx.repo.get_documents(workspace_id)) == 1
 
 
+def test_documents_survive_context_recreation_for_the_same_user():
+    """Simulates a refresh/new API request after the in-memory cache is gone."""
+    ctx = get_user_context(USER_ALPHA)
+    workspace_id = ctx.repo.ensure_default_workspace(owner_user_id=USER_ALPHA)
+    result = asyncio.run(
+        ctx.ingestion_agent.ingest_content(
+            workspace_id=workspace_id,
+            title="Refresh Persistence",
+            filename="refresh.txt",
+            raw_content="This document must be available after a new user context is created.",
+            file_type="text",
+            authority_level="HIGH",
+        )
+    )
+
+    user_storage_mod._USER_CONTEXT_CACHE.clear()
+    reloaded = get_user_context(USER_ALPHA)
+    documents = reloaded.repo.get_documents(workspace_id)
+
+    assert [document["id"] for document in documents] == [result["document_id"]]
+    assert documents[0]["authority_level"] == "HIGH"
+
+
 def test_api_upload_returns_document_identity_and_authority():
     """The success modal needs both fields from the public response contract."""
     from fastapi.testclient import TestClient

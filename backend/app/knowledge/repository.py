@@ -217,8 +217,13 @@ class KnowledgeRepository:
         with self._get_conn() as conn:
             conn.execute(
                 """
-                INSERT OR REPLACE INTO chunk_embeddings (chunk_id, workspace_id, embedding, dim, model)
+                INSERT INTO chunk_embeddings (chunk_id, workspace_id, embedding, dim, model)
                 VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (chunk_id) DO UPDATE SET
+                    workspace_id = EXCLUDED.workspace_id,
+                    embedding = EXCLUDED.embedding,
+                    dim = EXCLUDED.dim,
+                    model = EXCLUDED.model
                 """,
                 (chunk_id, workspace_id, embedding_bytes, int(dim), model),
             )

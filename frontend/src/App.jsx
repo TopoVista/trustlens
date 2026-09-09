@@ -6,6 +6,7 @@ import SpecialistCanvas from './components/SpecialistCanvas.jsx';
 import AnswerContractPanel from './components/AnswerContractPanel.jsx';
 import HealthAuditDashboard from './components/HealthAuditDashboard.jsx';
 import KnowledgeGraphTimeline from './components/KnowledgeGraphTimeline.jsx';
+import DocumentLibrary from './components/DocumentLibrary.jsx';
 import SemanticRulesManager from './components/SemanticRulesManager.jsx';
 import IngestionModal from './components/IngestionModal.jsx';
 import ArchitectureModal from './components/ArchitectureModal.jsx';
@@ -18,6 +19,7 @@ import {
   getWorkspaceHealth,
   getWorkspaceDiscoveries,
   uploadDocument,
+  getWorkspaceDocuments,
   getWorkspaceEntities,
   getWorkspaceTimeline,
   getWorkspaceRules,
@@ -34,10 +36,11 @@ import {
   Layers, 
   Activity,
   Compass,
-  HardDrive
+  HardDrive,
+  FileText
 } from 'lucide-react';
 
-function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = null }) {
+function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = null, isAuthReady = true }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [healthData, setHealthData] = useState(null);
@@ -46,8 +49,9 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
   const [entitiesData, setEntitiesData] = useState(null);
   const [timelineData, setTimelineData] = useState([]);
   const [rules, setRules] = useState([]);
+  const [workspaceDocuments, setWorkspaceDocuments] = useState([]);
 
-  const [activeView, setActiveView] = useState('query'); // 'query' | 'health' | 'graph' | 'rules'
+  const [activeView, setActiveView] = useState('query'); // 'query' | 'documents' | 'health' | 'graph' | 'rules'
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
   const [isHealthy, setIsHealthy] = useState(true);
@@ -58,27 +62,48 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 
   // Sync auth context whenever user changes
   useEffect(() => {
+    // Clerk restores its session asynchronously. Do not issue a request for
+    // default_user while the real user is still loading, otherwise a slow
+    // stale response can overwrite the authenticated user's workspaces.
+    if (isClerkConfigured && !isAuthReady) return undefined;
+    if (isClerkConfigured && !clerkUser?.id) {
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+      setWorkspaceDocuments([]);
+      setStorageStats(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const isCurrent = () => !cancelled;
     const userId = clerkUser?.id || 'default_user';
     setAuthContext(userId, getToken);
     
     // Refresh storage stats and workspaces for this user
-    checkHealth().then((ok) => setIsHealthy(ok));
-    refreshStorageStats();
-    loadWorkspaces();
-  }, [clerkUser?.id]);
+    checkHealth().then((ok) => {
+      if (isCurrent()) setIsHealthy(ok);
+    });
+    refreshStorageStats(isCurrent);
+    loadWorkspaces(isCurrent);
 
-  const refreshStorageStats = async () => {
+    return () => {
+      cancelled = true;
+    };
+  }, [clerkUser?.id, isClerkConfigured, isAuthReady]);
+
+  const refreshStorageStats = async (isCurrent = () => true) => {
     try {
       const stats = await getUserStorageInfo();
-      setStorageStats(stats);
+      if (isCurrent()) setStorageStats(stats);
     } catch (err) {
       console.error('Failed to load user storage stats:', err);
     }
   };
 
-  const loadWorkspaces = async () => {
+  const loadWorkspaces = async (isCurrent = () => true) => {
     try {
       const list = await listWorkspaces();
+      if (!isCurrent()) return;
       setWorkspaces(list);
       if (list.length > 0) {
         setActiveWorkspace(list[0]);
@@ -87,6 +112,7 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
       }
     } catch (err) {
       console.error('Failed to load workspaces:', err);
+      if (!isCurrent()) return;
       setErrorMessage(
         'Unable to connect to the TrustLens backend. ' +
         'The production server may be deploying an update — please refresh in a minute. ' +
@@ -103,12 +129,13 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 
   const refreshWorkspaceData = async (wsId) => {
     try {
-      const [h, d, e, t, r] = await Promise.all([
+      const [h, d, e, t, r, documents] = await Promise.all([
         getWorkspaceHealth(wsId).catch(() => null),
         getWorkspaceDiscoveries(wsId).catch(() => ({ discoveries: [] })),
         getWorkspaceEntities(wsId).catch(() => null),
         getWorkspaceTimeline(wsId).catch(() => []),
         getWorkspaceRules(wsId).catch(() => []),
+        getWorkspaceDocuments(wsId).catch(() => []),
       ]);
 
       setHealthData(h);
@@ -116,6 +143,7 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
       setEntitiesData(e);
       setTimelineData(t || []);
       setRules(r || []);
+      setWorkspaceDocuments(documents || []);
       refreshStorageStats();
     } catch (err) {
       console.error('Error refreshing workspace data:', err);
@@ -219,14 +247,14 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
             Evidence-Grounded Intelligence Over Your Data
           </h1>
           <p className="text-xs sm:text-sm text-trust-muted mt-2 max-w-xl mx-auto">
-            Each user's knowledge is strictly isolated in dedicated SQLite databases on their local hard disk.
+            Each user's knowledge is isolated in a dedicated workspace and restored after signing in.
             Decompose assertions, ground claims against evidence, and discover cross-document contradictions.
           </p>
 
           {storageStats && (
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-trust-card border border-trust-border text-[11px] font-mono text-gray-300">
               <HardDrive className="w-3.5 h-3.5 text-trust-cyan" />
-              <span>Host Partition:</span>
+              <span>Storage Backend:</span>
               <span className="text-trust-cyan font-bold">{storageStats.storage_path}</span>
             </div>
           )}
@@ -261,6 +289,18 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Grounded Q&A & Claims</span>
+              </button>
+
+              <button
+                onClick={() => setActiveView('documents')}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 ${
+                  activeView === 'documents'
+                    ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
+                    : 'bg-trust-surface text-gray-400 hover:text-white'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Documents ({workspaceDocuments.length})</span>
               </button>
 
               <button
@@ -315,6 +355,13 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
           <AnswerContractPanel data={queryResult} />
         )}
 
+        {activeView === 'documents' && (
+          <DocumentLibrary
+            documents={workspaceDocuments}
+            activeWorkspace={activeWorkspace}
+          />
+        )}
+
         {activeView === 'health' && (
           <HealthAuditDashboard
             healthData={healthData}
@@ -360,9 +407,9 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 }
 
 function ClerkAppWrapper() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  return <AppContent isClerkConfigured={true} clerkUser={user} getToken={getToken} />;
+  return <AppContent isClerkConfigured={true} clerkUser={user} getToken={getToken} isAuthReady={isLoaded} />;
 }
 
 function StandaloneAppWrapper() {

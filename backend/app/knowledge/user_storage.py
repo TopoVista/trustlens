@@ -5,13 +5,12 @@ and file storage directories on the host hard disk for each user.
 """
 import os
 import re
-import sqlite3
 import logging
 from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, Optional, Any
 
-from app.knowledge.db import init_knowledge_schema
+from app.knowledge.db import get_db_connection, init_knowledge_schema, using_postgres
 from app.knowledge.repository import KnowledgeRepository
 from app.specialists.ingestion_agent import IngestionKnowledgeAgent
 from app.planner.planner import AnalysisPlanner
@@ -49,6 +48,33 @@ def get_user_db_path(user_id: str) -> str:
 
 def get_user_storage_stats(user_id: str) -> Dict[str, Any]:
     """Calculates disk space usage and storage metrics for a specific user."""
+    safe_user_id = sanitize_user_id(user_id)
+    if using_postgres():
+        # A shared Postgres database is durable, but isolation remains at the
+        # workspace owner boundary. Never expose its connection string or
+        # aggregate another user's data in this response.
+        repo = KnowledgeRepository()
+        workspaces = repo.list_workspaces(owner_user_id=safe_user_id)
+        document_count = claim_count = 0
+        for workspace in workspaces:
+            health = repo.get_knowledge_health(workspace["id"])
+            document_count += health["documents"]
+            claim_count += health["claims"]
+        return {
+            "user_id": safe_user_id,
+            "storage_path": "Render Postgres (durable)",
+            "storage_backend": "postgres",
+            "durable": True,
+            "total_bytes": 0,
+            "total_kb": 0,
+            "total_mb": 0,
+            "db_bytes": 0,
+            "files_count": 0,
+            "document_count": document_count,
+            "workspace_count": len(workspaces),
+            "claim_count": claim_count,
+        }
+
     user_dir = get_user_storage_dir(user_id)
     total_bytes = 0
     file_count = 0
@@ -71,17 +97,19 @@ def get_user_storage_stats(user_id: str) -> Dict[str, Any]:
     claim_count = 0
     if os.path.exists(db_path):
         try:
-            conn = sqlite3.connect(db_path)
+            conn = get_db_connection(db_path)
             document_count = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
             workspace_count = conn.execute("SELECT COUNT(*) FROM workspaces").fetchone()[0]
             claim_count = conn.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
             conn.close()
-        except sqlite3.Error as e:
+        except Exception as e:  # noqa: BLE001 - storage stats must not break the UI
             logger.warning("Could not read counts for user '%s': %s", sanitize_user_id(user_id), e)
 
     return {
-        "user_id": sanitize_user_id(user_id),
+        "user_id": safe_user_id,
         "storage_path": str(user_dir),
+        "storage_backend": "sqlite",
+        "durable": False,
         "total_bytes": total_bytes,
         "total_kb": round(total_bytes / 1024, 2),
         "total_mb": round(total_bytes / (1024 * 1024), 3),
@@ -106,7 +134,7 @@ class UserKnowledgeContext:
 
         # Repository is lightweight (SQLite handle, no models) — keep eager.
         self.repo = KnowledgeRepository(db_path=self.db_path)
-        self.repo.ensure_default_workspace()
+        self.repo.ensure_default_workspace(owner_user_id=self.user_id)
 
         # Heavy orchestrators are constructed lazily on first use so that
         # endpoints like /health, /documents (read), /claims, /entities never
