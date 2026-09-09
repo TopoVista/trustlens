@@ -5,15 +5,19 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import router
 
-# Load environment variables from .env file if present
+# Load environment variables before importing routes.  Route imports resolve
+# authentication configuration, so loading this afterwards silently made a
+# local backend ignore AUTH_MODE/JWT values from backend/.env.  Do not let a
+# checked-out .env override Render's actual service environment.
 for env_path in [
     Path(__file__).resolve().parent.parent / ".env",
     Path(__file__).resolve().parents[2] / ".env"
 ]:
     if env_path.exists():
-        load_dotenv(dotenv_path=env_path, override=True)
+        load_dotenv(dotenv_path=env_path, override=False)
+
+from app.api.routes import router
 
 # Configure logging
 logging.basicConfig(
