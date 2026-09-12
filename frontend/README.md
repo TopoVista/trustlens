@@ -1,70 +1,59 @@
-# Getting Started with Create React App
+# TrustLens frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The frontend is a React 18 and Vite single-page application for the TrustLens
+evidence workspace. It does not embed a backend URL: Vite compiles
+`VITE_API_URL` into each deployment.
 
-## Available Scripts
+## Commands
 
-In the project directory, you can run:
+```powershell
+cd frontend
+npm install
+npm run dev
+npm test
+npm run build
+```
 
-### `npm start`
+`npm test` exercises the confidence-formatting utility. `npm run build` creates
+the Vercel-ready `dist` directory.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Environment
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Copy `.env.example` to `.env` and set:
 
-### `npm test`
+```ini
+VITE_API_URL=http://localhost:8000
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+For production, configure this value in Vercel with the deployed Render API
+origin, without a trailing slash. If Clerk is enabled, provide the project's
+publishable key through the existing frontend environment configuration. Never
+place a backend secret or a `DATABASE_URL` in a Vite variable.
 
-### `npm run build`
+## Product composition
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- `src/App.jsx` hydrates authentication, workspaces, storage state, source
+  register data, health, graph, timeline, rules, ingestion, and query results.
+- `src/api.js` contains all browser HTTP calls and token/header attachment.
+- `src/components/KnowledgeHeader.jsx` manages the active workspace and creates
+  new ones.
+- `src/components/IngestionModal.jsx` collects content and authority, and shows
+  the returned document ID and authority after ingestion.
+- `src/components/AnswerContractPanel.jsx` renders synthesis, claims, evidence,
+  conflicts, uncertainty, and a normalized confidence percentage.
+- `src/components/DocumentLibrary.jsx`, `HealthAuditDashboard.jsx`,
+  `KnowledgeGraphTimeline.jsx`, and `SemanticRulesManager.jsx` provide the
+  persistent workspace views.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The current visual system is a deep-ink evidence desk with restrained
+violet/cyan accents and the original generated image at
+`src/assets/trustlens-verification-hero.png`. The image is decorative; it does
+not represent a source, a score, or an evidence result.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Important behavior
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The UI preserves source provenance instead of keeping it in a temporary toast:
+the document library displays document ID, declared authority, and ingestion
+status after every refresh. The storage label is intentionally descriptive,
+not a guarantee: use the API response from `/api/me/storage` to establish
+whether the connected backend is durable Postgres or local SQLite.

@@ -1,244 +1,125 @@
-# TrustLens V2 — AI Reliability & RAG Claim Verification
+# TrustLens
 
-> **“RAG retrieves evidence for generation; TrustLens independently retrieves evidence to verify what the model actually said.”**
+TrustLens is an evidence-first workspace for working with your own documents.
+It ingests text-based source material into a private workspace, extracts claims,
+entities, and time anchors, then lets a user ask questions with the supporting
+record kept visible. The product is designed around one principle: a generated
+answer is not proof; the evidence behind it must remain reviewable.
 
-TrustLens is an AI reliability and claim verification platform designed to catch hallucinations and ground LLM outputs. Rather than trusting a generated answer at face value, TrustLens deconstructs the response into sentence-level claims, independently retrieves evidence for each claim, and evaluates grounding using Natural Language Inference (NLI).
+## Current product capabilities
 
----
+- Private, owner-scoped workspaces with Clerk-aware browser authentication.
+- Direct-text and supported text-file ingestion with a returned document ID,
+  declared authority level, ingestion status, and semantic chunk count.
+- Evidence-grounded workspace queries with an answer contract for synthesis,
+  atomic claims, retrieved evidence, contradictions, and unresolved items.
+- Evidence health metrics, proactive discovery signals, an entity map, a
+  chronological timeline, and workspace-specific verification policies.
+- A React/Vite frontend with an original TrustLens verification visual and an
+  evidence-centered review interface.
+- Local SQLite storage for development and durable Postgres storage when
+  `DATABASE_URL` is configured.
 
 ## Architecture
 
-```
-                                USER QUERY
-                                    │
-                                    ▼
-                          ┌──────────────────┐
-                          │ MiniLM-L6 Embed  │
-                          └─────────┬────────┘
-                                    │
-                                    ▼
-                          ┌──────────────────┐
-                          │  FAISS Retrieval │  (Cosine Inner-Product)
-                          └─────────┬────────┘
-                                    │ Top-5 Evidence
-                                    ▼
-                          ┌──────────────────┐
-                          │ OpenAI Generation│  (Strictly Grounded Prompt)
-                          └─────────┬────────┘
-                                    │
-                                    ▼
-                          ┌──────────────────┐
-                          │ spaCy Claim Split│  (Sentence Decomposition)
-                          └─────────┬────────┘
-                                    │ Atomic Claims
-                                    ▼
-                          ┌──────────────────┐
-                          │ Claim Retrieval  │  (Independent Top-3 FAISS Search)
-                          └─────────┬────────┘
-                                    │ Claim-Evidence Pairs
-                                    ▼
-                          ┌──────────────────┐
-                          │ MiniLM2-L6 NLI   │  (Premise-Hypothesis Classification)
-                          └─────────┬────────┘
-                                    │
-                 ┌──────────────────┼──────────────────┐
-                 ▼                  ▼                  ▼
-          [ SUPPORTED ]     [ NOT_SUPPORTED ]   [ CONTRADICTED ]
-          (Entailment ≥0.70) (Insufficient Data) (Contradiction ≥0.70)
-                 │                  │                  │
-                 └──────────────────┼──────────────────┘
-                                    ▼
-                          ┌──────────────────┐
-                          │   Trust Report   │  (Faithfulness Score + Evidence Cards)
-                          └──────────────────┘
+```text
+Browser (React / Vite / Clerk)
+        |
+        | VITE_API_URL, bearer token when configured
+        v
+FastAPI routes and authorization
+        |
+        +--> Workspace repository --> SQLite locally or Postgres with DATABASE_URL
+        |
+        +--> Ingestion: documents -> chunks -> claims/entities/events/evidence links
+        |
+        +--> Planner -> relevant in-process specialist capabilities -> answer contract
+        |
+        +--> Optional OpenAI providers for generation, embeddings, and verification
 ```
 
----
+The production service does not rely on local PyTorch, Transformers, FAISS,
+spaCy, or sentence-transformer runtime dependencies. OpenAI-backed providers
+are loaded only when needed, and deterministic fallback behavior supports
+degraded operation when a provider is unavailable.
 
-## Tech Stack
+## Local development
 
-- **Frontend**: React 18, Vite 5, Tailwind CSS, Framer Motion, Lucide React
-- **Backend API**: FastAPI, Uvicorn, Pydantic v2, Python Dotenv
-- **Vector Retrieval**: FAISS (`IndexFlatIP`), `sentence-transformers/all-MiniLM-L6-v2`
-- **Generation**: OpenAI Python SDK (`gpt-5.6-luna` / configurable)
-- **Claim Decomposition**: spaCy sentence segmentation with robust blank-sentencizer fallback
-- **Verification Engine**: Hugging Face Transformers, `cross-encoder/nli-MiniLM2-L6-H768`, PyTorch
-- **Corpus**: 450 technical database architecture and internals documents
-- **Deployment**: Render (FastAPI Web Service) + Vercel (Vite React SPA)
+Prerequisites: Python 3.11+ (3.12/3.13 also work), Node.js 18+, and optionally
+an OpenAI API key for provider-backed analysis.
 
----
-
-## End-to-End Workflow
-
-1. **Query Ingestion**: The user submits a technical query (e.g., *"Why do B-tree indexes improve query performance?"*).
-2. **Context Retrieval**: The query is embedded via `all-MiniLM-L6-v2` and searched against FAISS vector storage to pull top-$k$ documents.
-3. **Grounded Synthesis**: OpenAI receives the query and retrieved context under strict instructions: *use only provided documents, do not speculate, acknowledge missing facts*.
-4. **Sentence Decomposition**: The generated answer is decomposed into individual verifiable claims using spaCy.
-5. **Independent Claim Retrieval**: For each extracted claim, TrustLens performs a fresh, targeted vector retrieval against the corpus.
-6. **NLI Verification**: Each (evidence premise, claim hypothesis) pair is evaluated by `cross-encoder/nli-MiniLM2-L6-H768` with dynamic label mapping:
-   - **Contradiction $\ge 0.70$** $\rightarrow$ `CONTRADICTED`
-   - **Entailment $\ge 0.70$** $\rightarrow$ `SUPPORTED`
-   - **Else** $\rightarrow$ `NOT_SUPPORTED` (insufficient evidence)
-7. **Faithfulness Scoring & Telemetry**: Faithfulness is computed as the confidence-weighted entailment ratio across all claims. Latency profiling tracks retrieval, generation, and verification milliseconds.
-
----
-
-## Local Development Setup
-
-### Prerequisites
-- Python 3.12+ (or 3.13)
-- Node.js 18+ and npm
-- OpenAI API Key
-
-### 1. Backend Setup
-
-```bash
-# Navigate to backend directory
+```powershell
+# Backend
 cd backend
-
-# Create and activate virtual environment
 python -m venv .venv
-
-# On Linux/macOS:
-source .venv/bin/activate
-# On Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-
-# Install dependencies
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# Copy environment template and configure OpenAI key
-cp .env.example .env
-# Edit .env and set your OPENAI_API_KEY
-
-# Start backend server
+Copy-Item .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-Verify backend health at: [http://localhost:8000/health](http://localhost:8000/health)
-
-### 2. Frontend Setup
-
-```bash
-# In a new terminal, navigate to frontend directory
+```powershell
+# Frontend, in another terminal
 cd frontend
-
-# Install dependencies
 npm install
-
-# Copy environment template
-cp .env.example .env
-# Ensure VITE_API_URL=http://localhost:8000
-
-# Start Vite development server
+Copy-Item .env.example .env
 npm run dev
 ```
 
-Open your browser at [http://localhost:5173](http://localhost:5173).
+Set `VITE_API_URL=http://localhost:8000` in `frontend/.env`. For local
+development, configure backend authentication as described in
+[backend/README.md](backend/README.md).
 
----
+## Production deployment
 
-## Environment Variables
+`render.yaml` defines a Docker Render web service and a `trustlens-postgres`
+database for Blueprint deployments. Vercel should deploy the `frontend`
+directory with `VITE_API_URL` set to the deployed Render API URL.
 
-### Backend (`backend/.env`)
+Important: a manually created Render web service does not become durable merely
+because this repository contains a Blueprint. Create or connect a Render
+Postgres database, set its internal connection string as `DATABASE_URL`, and
+redeploy. The live source of truth is `GET /api/me/storage`: durable Postgres
+reports `storage_backend: "postgres"` and `durable: true`. SQLite on a Render
+free web service is ephemeral.
 
-```ini
-# OpenAI Configuration
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-5.6-luna
+Never commit `OPENAI_API_KEY`, JWT keys, a `DATABASE_URL`, or a frontend
+environment file containing real secrets.
 
-# CORS Allowed Origins (comma-separated)
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+## Verification and tests
 
-# Verification & Retrieval Settings
-NLI_MODEL=cross-encoder/nli-MiniLM2-L6-H768
-NLI_THRESHOLD=0.70
-RETRIEVAL_K=5
-CLAIM_RETRIEVAL_K=3
+```powershell
+# From the repository root
+pytest tests -q
+
+# From frontend
+npm test
+npm run build
 ```
 
-### Frontend (`frontend/.env`)
+The frontend confidence helper accepts both a 0-1 ratio and an already scaled
+0-100 percentage, then clamps the rendered value to 0-100. This prevents a
+valid value such as `94.1` from being displayed as `9410%`.
 
-```ini
-VITE_API_URL=http://localhost:8000
-```
+## Documentation
 
----
+- [Project architecture](docs/architecture.md)
+- [Implementation status](docs/IMPLEMENTATION_STATUS.md)
+- [Render deployment review](docs/RENDER_FREE_AUDIT.md)
+- [Render persistence setup](docs/RENDER_PERSISTENCE_SETUP.md)
+- [Dataset analytics API](docs/DATASET_ANALYTICS.md)
+- [Demo walkthrough](docs/demo.md)
+- [Evaluation plan](docs/evaluation.md)
+- [Error and limitation register](docs/errors.md)
+- [Ablation plan](docs/ablation.md)
+- [Historical baseline-output note](docs/baseline_outputs.md)
+- [Workflow and interview guide](docs/TrustLens_Project_Workflow_and_Interview_Guide.docx)
+- [Top-ten code guide](docs/TrustLens_Top_Ten_Important_Files_Code_Guide.docx)
 
-## Production Deployment
+## Scope and limits
 
-### 1. Backend Deployment to Render
-
-1. Create a new **Web Service** on [Render.com](https://render.com).
-2. Connect your GitHub repository.
-3. Configure settings:
-   - **Name**: `trustlens-api`
-   - **Environment**: `Python 3`
-   - **Root Directory**: *(leave blank or `.`)*
-   - **Build Command**: `pip install -r backend/requirements.txt`
-   - **Start Command**: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Health Check Path**: `/health`
-4. Add Environment Variables in the Render Dashboard:
-   - `OPENAI_API_KEY`: *(your real OpenAI secret key)*
-   - `OPENAI_MODEL`: `gpt-5.6-luna`
-   - `CORS_ORIGINS`: `https://YOUR-VERCEL-DOMAIN.vercel.app`
-   - `NLI_MODEL`: `cross-encoder/nli-MiniLM2-L6-H768`
-   - `NLI_THRESHOLD`: `0.70`
-   - `RETRIEVAL_K`: `5`
-   - `CLAIM_RETRIEVAL_K`: `3`
-5. Deploy and copy your Render live service URL (e.g., `https://trustlens-api.onrender.com`).
-
-*(Note: `render.yaml` is also included at the project root for automated Render Blueprint deployments.)*
-
-### 2. Frontend Deployment to Vercel
-
-1. Import your repository into [Vercel](https://vercel.com).
-2. Set **Root Directory** to `frontend`.
-3. Framework Preset will automatically detect **Vite**.
-4. Configure Build and Output settings:
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-5. Add Environment Variable:
-   - `VITE_API_URL`: `https://YOUR-RENDER-SERVICE.onrender.com` *(your live Render backend URL without trailing slash)*
-6. Deploy (or redeploy after changing an environment variable). The frontend
-   reads `VITE_API_URL` at build time; it does not use a hard-coded production
-   API URL.
-
----
-
-## Running Automated Tests
-
-A comprehensive pytest suite validates retrieval, claim splitting, uncertainty preservation, NLI entailment mapping, and API endpoints with mocked LLM calls:
-
-```bash
-# Run test suite from repository root
-pytest tests/ -v
-```
-
-Tests run completely offline without requiring an active `OPENAI_API_KEY`.
-
----
-
-## Important Semantic Distinction
-
-> **`NOT_SUPPORTED` does NOT mean `FALSE`.**
-
-A verdict of `NOT_SUPPORTED` indicates that the specific evidence retrieved from the corpus was insufficient to conclusively prove the claim. It protects users from blind trust without falsely asserting that the LLM stated an objective falsehood. `CONTRADICTED` is reserved for claims directly refuted by retrieved evidence.
-
----
-
-## Limitations
-
-1. **Corpus Coverage**: TrustLens can only ground claims present in its database corpus (450 documents on database internals). Queries on outside topics will yield `NOT_SUPPORTED`.
-2. **Atomic Splitting**: Complex compound sentences with dependent clauses are split at sentence boundaries. Very dense sentences with mixed factual accuracy are evaluated as a whole.
-3. **NLI Threshold Sensitivity**: Highly subtle entailments may fall below the 0.70 confidence threshold and default to `NOT_SUPPORTED`.
-
----
-
-## Future Roadmap
-
-- **Hybrid Retrieval**: Combine dense semantic FAISS embeddings with sparse BM25 keyword matching for exact numerical and identifier queries.
-- **Span-Level Evidence Attribution**: Highlight precise character offsets and token spans within evidence documents rather than document-level excerpts.
-- **Sub-Sentence Clause Parsing**: Deconstruct compound sentences into atomic fact triplets $(subject, predicate, object)$ for finer-grained verification.
-- **Cross-Encoder Reranking**: Add a BGE or Cohere reranker prior to generation to maximize evidence precision.
-- **Verification Feedback Loop**: Automatically prompt the generator to revise or redact ungrounded claims before presenting the final verified response to the user.
+TrustLens is a document evidence-review tool, not a certification of objective
+truth. `NOT_SUPPORTED` or `UNRESOLVED` means the available workspace evidence
+does not establish a claim; it does not mean the claim is objectively false.
+Review source passages for decisions with legal, financial, medical, security,
+or other high-stakes consequences.

@@ -1,198 +1,24 @@
 import React from 'react';
-import { 
-  ShieldCheck, 
-  AlertTriangle, 
-  FileText, 
-  Layers, 
-  Activity, 
-  Sparkles, 
-  GitCompare, 
-  Calendar, 
-  Bell, 
-  CheckCircle2, 
-  XCircle,
-  HelpCircle
-} from 'lucide-react';
+import { AlertTriangle, Bell, FileText, GitCompare, HelpCircle, Layers, ShieldCheck, Timer } from 'lucide-react';
 
-export default function HealthAuditDashboard({
-  healthData,
-  discoveries = [],
-  activeWorkspace
-}) {
-  if (!healthData) return null;
+const METRICS = [
+  ['documents', 'Sources', FileText, 'text-trust-cyan', 'Documents retained in this workspace'],
+  ['claims', 'Claims', ShieldCheck, 'text-trust-green', 'Assertions extracted for review'],
+  ['entities', 'Entities', Layers, 'text-[#c7b7ff]', 'People, concepts, and organizations'],
+  ['events', 'Events', Timer, 'text-trust-amber', 'Dates and milestones found']
+];
 
-  const {
-    documents = 0,
-    claims = 0,
-    entities = 0,
-    events = 0,
-    breakdown = {},
-    major_contradictions = 0,
-    knowledge_gaps = 0
-  } = healthData;
+export default function HealthAuditDashboard({ healthData, discoveries = [], activeWorkspace }) {
+  if (!healthData) return <section className="border-x border-b border-white/[.09] bg-[#0c0d1b] px-5 py-12 text-center text-xs text-[#989bb0]">Health data will appear after the workspace is ready.</section>;
+  const { documents = 0, claims = 0, entities = 0, events = 0, breakdown = {}, major_contradictions: conflicts = 0, knowledge_gaps: gaps = 0 } = healthData;
+  const supported = breakdown.supported_pct || 0;
+  const contradicted = breakdown.contradicted_pct || 0;
+  const unresolved = breakdown.unresolved_unsupported_pct || 0;
+  const values = { documents, claims, entities, events };
 
-  const supportedPct = breakdown.supported_pct || 0;
-  const contradictedPct = breakdown.contradicted_pct || 0;
-  const unresolvedPct = breakdown.unresolved_unsupported_pct || 0;
-
-  return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 my-6 space-y-6">
-      {/* 1. Header & Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-trust-card border border-trust-border/80 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-trust-muted uppercase tracking-wider">
-              Documents
-            </span>
-            <FileText className="w-4 h-4 text-trust-cyan" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{documents}</div>
-          <p className="text-[10px] font-mono text-gray-400 mt-1">Ingested in workspace</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-trust-card border border-trust-border/80 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-trust-muted uppercase tracking-wider">
-              Atomic Claims
-            </span>
-            <ShieldCheck className="w-4 h-4 text-trust-green" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{claims}</div>
-          <p className="text-[10px] font-mono text-gray-400 mt-1">Decomposed assertions</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-trust-card border border-trust-border/80 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-trust-muted uppercase tracking-wider">
-              Named Entities
-            </span>
-            <Layers className="w-4 h-4 text-trust-accent" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{entities}</div>
-          <p className="text-[10px] font-mono text-gray-400 mt-1">Knowledge graph nodes</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-trust-card border border-trust-border/80 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-trust-muted uppercase tracking-wider">
-              Temporal Events
-            </span>
-            <Calendar className="w-4 h-4 text-trust-amber" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{events}</div>
-          <p className="text-[10px] font-mono text-gray-400 mt-1">Anchored milestones</p>
-        </div>
-      </div>
-
-      {/* 2. Verification Health Integrity Bar */}
-      <div className="p-5 rounded-2xl bg-trust-card border border-trust-border/80 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-trust-accent" />
-              Evidence Verification Distribution
-            </h3>
-            <p className="text-xs text-trust-muted font-mono">
-              Integrity audit across all decomposed claims in this workspace
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="flex items-center gap-1.5 text-trust-green">
-              <span className="w-2.5 h-2.5 rounded-full bg-trust-green" />
-              Supported: {supportedPct}%
-            </span>
-            <span className="flex items-center gap-1.5 text-trust-red">
-              <span className="w-2.5 h-2.5 rounded-full bg-trust-red" />
-              Contradicted: {contradictedPct}%
-            </span>
-            <span className="flex items-center gap-1.5 text-trust-amber">
-              <span className="w-2.5 h-2.5 rounded-full bg-trust-amber" />
-              Unresolved: {unresolvedPct}%
-            </span>
-          </div>
-        </div>
-
-        {/* Multi-segment Progress Bar */}
-        <div className="w-full h-3 bg-trust-surface rounded-full overflow-hidden flex shadow-inner">
-          <div
-            style={{ width: `${supportedPct}%` }}
-            className="bg-trust-green h-full transition-all duration-500"
-            title={`Supported: ${supportedPct}%`}
-          />
-          <div
-            style={{ width: `${contradictedPct}%` }}
-            className="bg-trust-red h-full transition-all duration-500"
-            title={`Contradicted: ${contradictedPct}%`}
-          />
-          <div
-            style={{ width: `${unresolvedPct}%` }}
-            className="bg-trust-amber h-full transition-all duration-500"
-            title={`Unresolved: ${unresolvedPct}%`}
-          />
-        </div>
-      </div>
-
-      {/* 3. Proactive "Things You Should Know" Discoveries Feed */}
-      {discoveries && discoveries.length > 0 && (
-        <div className="p-5 rounded-2xl bg-trust-card border border-trust-border/80 shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-trust-amber/20 border border-trust-amber/40 text-trust-amber">
-                <Bell className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Proactive Intelligence: Things You Should Know
-                </h3>
-                <p className="text-xs text-trust-muted font-mono">
-                  Autonomous pattern hunter discoveries surfaced from workspace cross-referencing
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-mono px-2.5 py-1 rounded-xl bg-trust-surface border border-trust-border text-gray-300">
-              {discoveries.length} Discovered
-            </span>
-          </div>
-
-          <div className="grid gap-3">
-            {discoveries.map((item, idx) => {
-              const isContradiction = item.type === 'contradiction';
-              const isGap = item.type === 'gap';
-              const borderColor = isContradiction
-                ? 'border-trust-red/40 bg-trust-red-bg/50'
-                : 'border-trust-amber/40 bg-trust-amber-bg/50';
-              const iconColor = isContradiction ? 'text-trust-red' : 'text-trust-amber';
-              const Icon = isContradiction ? GitCompare : HelpCircle;
-
-              return (
-                <div
-                  key={idx}
-                  className={`p-4 rounded-xl border ${borderColor} space-y-2`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Icon className={`w-4 h-4 ${iconColor} shrink-0`} />
-                      <h4 className="text-xs font-bold text-white">{item.title}</h4>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-trust-card border border-trust-border text-gray-300">
-                      {item.severity || 'NOTICE'}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-gray-200">{item.summary}</p>
-
-                  {item.detail && (
-                    <p className="text-[11px] font-mono text-gray-400 bg-trust-card/60 p-2.5 rounded-lg border border-trust-border/40">
-                      💡 {item.detail}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <section className="border-x border-b border-white/[.09] bg-[#0c0d1b] px-5 py-7 sm:px-7 sm:py-8"><div className="mx-auto max-w-5xl"><div className="flex flex-wrap items-end justify-between gap-4"><div><div className="editorial-kicker text-[#999cb3]">Evidence health</div><h3 className="mt-2 text-xl font-extrabold tracking-[-.045em] text-white">See where your record is strong—and where it is thin.</h3><p className="mt-2 text-xs text-[#a1a4ba]">Verification overview for {activeWorkspace?.name || 'this workspace'}.</p></div><div className="flex gap-2"><span className="rounded-full border border-trust-red/25 bg-trust-red-bg px-2.5 py-1 text-[10px] font-mono text-[#ffc1c7]">{conflicts} conflicts</span><span className="rounded-full border border-trust-amber/25 bg-trust-amber-bg px-2.5 py-1 text-[10px] font-mono text-[#f8d890]">{gaps} gaps</span></div></div>
+    <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">{METRICS.map(([key, title, Icon, color, copy]) => <article key={key} className="rounded-[18px] border border-white/[.09] bg-[#15172a] p-4"><Icon className={`h-4 w-4 ${color}`} /><p className="mt-5 text-3xl font-extrabold tracking-[-.06em] text-white">{values[key]}</p><p className="mt-1 text-xs font-bold text-[#e4e4ee]">{title}</p><p className="mt-1 text-[10px] leading-4 text-[#8d90a6]">{copy}</p></article>)}</div>
+    <article className="mt-4 overflow-hidden rounded-[20px] border border-white/[.09] bg-[#15172a]"><div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="editorial-kicker text-[#999cb3]">Claim distribution</p><h4 className="mt-2 text-sm font-extrabold text-white">How the available evidence treats extracted claims</h4></div><div className="flex flex-wrap gap-3 text-[10px] font-mono"><span className="text-trust-green">{supported}% supported</span><span className="text-trust-red">{contradicted}% contradicted</span><span className="text-trust-amber">{unresolved}% unresolved</span></div></div><div className="flex h-3 bg-black/20"><span className="bg-trust-green" style={{ width: `${supported}%` }} /><span className="bg-trust-red" style={{ width: `${contradicted}%` }} /><span className="bg-trust-amber" style={{ width: `${unresolved}%` }} /></div></article>
+    {discoveries.length > 0 && <article className="mt-4 rounded-[20px] border border-white/[.09] bg-[#15172a] p-5"><div className="flex items-center gap-2"><Bell className="h-4 w-4 text-trust-amber" /><div><p className="text-sm font-extrabold text-white">Review queue</p><p className="mt-1 text-[10px] font-mono text-[#9497ae]">Cross-document signals worth looking at</p></div></div><div className="mt-4 grid gap-3">{discoveries.map((item, index) => { const conflict = item.type === 'contradiction'; const Icon = conflict ? GitCompare : HelpCircle; return <div key={item.id || index} className={`rounded-xl border p-3.5 ${conflict ? 'border-trust-red/25 bg-trust-red-bg' : 'border-trust-amber/25 bg-trust-amber-bg'}`}><div className="flex items-start gap-2"><Icon className={`mt-0.5 h-4 w-4 shrink-0 ${conflict ? 'text-trust-red' : 'text-trust-amber'}`} /><div><p className="text-xs font-extrabold text-white">{item.title || 'Review item'}</p><p className="mt-1 text-xs leading-5 text-[#d3c6af]">{item.summary || item.detail}</p></div></div></div>; })}</div></article>}
+  </div></section>;
 }

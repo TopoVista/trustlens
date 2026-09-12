@@ -1,57 +1,67 @@
-# TrustLens Implementation Status
+# TrustLens implementation status
 
-## Current State
+## Completed product path
 
-### Branch
-- `main` — Phase 0 audit + Phase 2 (Data Analytics) + Security Hardening (JWT auth + workspace ownership) complete
+The active product path is implemented and connected end to end:
 
-### Architecture
-- FastAPI backend (single process, single uvicorn worker) on Render Free
-- Per-user SQLite databases under `data/users/{user}/trustlens_knowledge.db`
-- OpenAI SDK for LLM generation/verification (NO local ML models)
-- NumPy-only lightweight analytics engine (`app/analytics/`)
-- Dataset endpoints: `/datasets/upload`, `/profile`, `/eda`, `/insights`, `/charts`, `/list`, `/{id}`, `DELETE /{id}`
-- Safe dataset questions: `POST /datasets/{id}/query` accepts a limited natural-language question or a validated JSON plan. It never evaluates generated code.
-- Dashboard and opt-in advanced analytics: `GET /datasets/{id}/dashboard`, `POST /datasets/{id}/forecast`, and `POST /datasets/{id}/anomalies` return frontend-renderable JSON only.
-- Existing workspace ingestion/retrieval, evidence provenance, claim links, and contradiction handling remain the Phase 4 implementation under `/api/workspaces/*`.
-- The Phase 5 coordinator/registry foundations stay in-process and emit activity events. Phase 7 adds a lazy OpenAI provider boundary, a safe disabled provider, and optional MCP tool descriptors; no MCP server starts at boot.
-- Legacy RAG: `/answer`, `/analyze`, `/api/assess`, `/api/ask`
-- Personal knowledge: `/api/workspaces/*`, `/api/me`
-- Frontend: React/Vite, Clerk auth, sends `x-user-id`
+- Workspace list and creation are owner-scoped.
+- Text-based source ingestion creates a document record, chunks, and enrichment data.
+- The ingestion response includes document ID, authority level, chunk count, and status; the frontend also retains this information in the source register after refresh.
+- Workspace queries return a synthesis contract with claims, evidence, contradictions, unknowns, plan trace, intent, and latency when available.
+- Source register, evidence health, discovery signals, knowledge map, timeline, and verification rules have dedicated frontend views.
+- Frontend confidence formatting accepts a ratio or percentage contract and safely clamps display to `0-100%`.
+- Production auth verifies Bearer JWTs and enforces workspace ownership. Development mode remains available for local iteration only.
+- Durable persistence is supported through Postgres whenever the running service has `DATABASE_URL`.
+- Render Blueprint configuration declares the Docker service, CORS policy, production auth mode, and `trustlens-postgres` database binding.
 
-### Authentication & Authorization (P0 — FIXED)
-- JWT signature verification (`PyJWT[cryptography]`): signature, `exp` (required), `iat`, `nbf`, issuer, audience, algorithm — all validated via `ALLOWED_ALGORITHMS`
-- **`none` algorithm explicitly rejected** (not in allowed list)
-- `AUTH_MODE=prod` (Render default per `render.yaml`): Bearer JWT required; user ID comes from the verified `sub` claim
-- `AUTH_MODE=dev` (local only): `x-user-id` header accepted and marked `is_authenticated=False`
-- **Workspace ownership enforced on every workspace-scoped route** (`enforce_workspace_ownership`): IDOR/cross-user access returns 404 (no existence leakage)
-- `workspaces.owner_user_id` column added via safe `ALTER TABLE` migration (existing DBs preserved)
-- `create_workspace`/`list_workspaces`/`ensure_default_workspace` all owner-scoped
-- New `/api/me` field: `auth_method` (additive, backward-compatible)
+## Current deployment conditions
 
-### Memory
-- Idle RSS: ~80 MB (target < 120 MB) ✓
-- Request RSS: ~80–120 MB (target < 180 MB) ✓
-- No heavy modules at startup ✓
+The repository is ready to declare durable storage, but a manually created Render
+service must still have a real Postgres connection added in the dashboard. The
+presence of `render.yaml` does not alter an existing service automatically.
 
-### Tests
-- 86 tests pass (70 prior + 16 new security tests)
+Use `GET /api/me/storage` to establish the active mode:
 
-### P0/P1/P2 Issues
-#### Fixed in this phase
-1. ~~Unverified JWT~~ — signature/claims verified in `app/api/auth.py`; forged/expired/`none`-alg tokens rejected (16 tests)
-2. ~~X-User-Id trust~~ — production requires a verified Bearer JWT; dev mode explicitly marked
-3. ~~No workspace ownership~~ — every workspace route enforces `owner_user_id`
-9. ~~File upload = raw text~~ — dataset upload supports raw + multipart
-#### Remaining (Phase 3+)
-4. Eager registry — `AgentRegistry.__init__` constructs all 15 specialists
-5. Eager ingestion sub-agents — `IngestionKnowledgeAgent.__init__` creates 4 sub-agents
-6. EvidenceAgent fake evidence — falls back to `chunks_data[0]`
-7. No ingestion transaction/state — no PENDING/PROCESSING/READY/FAILED
-8. No content-hash dedup
-10. Numeric parsing wrong — strips all $/% blindly, no percentage handling
-11. Categorical top_values uses `list(set())` — not actual top-freq
-12. Correlation only first 2 numeric columns — not all pairs
-13. Quartiles via index — not true percentile
-14. Verifier error → neutral — wrong semantics
-15. Planner over-executes — runs entity/claim/evidence always
+| Response field | Durable production value | Meaning |
+|---|---|---|
+| `storage_backend` | `postgres` | Repository is using the managed database connection. |
+| `durable` | `true` | Workspace documents survive web-service restarts and redeploys, subject to the database plan lifecycle. |
+| `storage_backend` | `sqlite` | Local storage mode is active. On Render Free, this is ephemeral. |
+| `durable` | `false` | Do not promise persistence across restart or redeploy. |
+
+## Current frontend state
+
+The current client has been refactored around a single evidence-desk visual
+system. It preserves the previous product flows while making source provenance
+and review state clearer:
+
+- A private-workspace hero explains the intended use without presenting a decorative image as evidence.
+- The source register displays ID, authority, and ingestion status for every document.
+- The answer panel offers synthesis, claims, evidence, and conflict views.
+- The ingestion success state shows the exact returned document ID and authority.
+- The architecture modal describes the current OpenAI-backed, lazy provider path instead of removed local model tooling.
+
+## Known limits and honest boundaries
+
+- The browser upload tab currently reads supported text-based files (`.txt`, `.md`, `.csv`, `.json`) before sending their text. It is not a promise of server-side PDF, DOCX, or image OCR support.
+- External AI provider availability can affect generation, embeddings, or verification enrichment. Fallback behavior is intentionally conservative and should not be represented as equivalent to full provider-backed analysis.
+- A confidence value is an evidence-grounding signal, not a probability of objective truth.
+- Render Free services can spin down. A first request can be slower while the service wakes.
+- Render Free Postgres has a plan lifecycle; review Render's current plan rules before treating it as permanent production retention.
+
+## Verification commands
+
+```powershell
+pytest tests -q
+
+cd frontend
+npm test
+npm run build
+```
+
+## Documentation maintenance rule
+
+When changing deployment, auth, persistence, or the public API, update this
+file, `README.md`, `docs/architecture.md`, and the corresponding deployment or
+frontend guide in the same change. Do not keep historical phase plans framed as
+the current implementation.

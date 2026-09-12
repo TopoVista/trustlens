@@ -1,339 +1,52 @@
 import React, { useState } from 'react';
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  FileText, 
-  ShieldCheck, 
-  ExternalLink, 
-  Sparkles, 
-  GitCompare, 
-  HelpCircle,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Bookmark,
-  Layers
-} from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, FileText, GitCompare, HelpCircle, Layers, Quote, ShieldCheck, Sparkles, XCircle } from 'lucide-react';
 import { toConfidencePercent } from '../utils/confidence';
 
+const verdictStyle = (status = '') => {
+  const normalized = status.toUpperCase();
+  if (normalized === 'SUPPORTED') return { label: 'Supported', dot: 'bg-trust-green', color: 'text-trust-green', panel: 'border-trust-green/30 bg-trust-green-bg' };
+  if (normalized === 'CONTRADICTED') return { label: 'Contradicted', dot: 'bg-trust-red', color: 'text-trust-red', panel: 'border-trust-red/30 bg-trust-red-bg' };
+  return { label: normalized.replace(/_/g, ' ') || 'Unresolved', dot: 'bg-trust-amber', color: 'text-trust-amber', panel: 'border-trust-amber/30 bg-trust-amber-bg' };
+};
+
 export default function AnswerContractPanel({ data }) {
+  const [tab, setTab] = useState('answer');
+  const [expanded, setExpanded] = useState(null);
   if (!data) return null;
 
-  const {
-    query,
-    intent,
-    answer,
-    confidence = 0.85,
-    claims = [],
-    evidence = [],
-    contradictions = [],
-    assumptions = [],
-    unknowns = [],
-    related_knowledge = [],
-    plan_trace = [],
-    latency_ms
-  } = data;
-
-  const [expandedClaim, setExpandedClaim] = useState(null);
-  const [activeTab, setActiveTab] = useState('answer'); // 'answer' | 'claims' | 'evidence' | 'contradictions'
-
-  // Confidence color
-  const confPct = toConfidencePercent(confidence);
-  const confColor = confPct >= 80 ? 'text-trust-green' : confPct >= 60 ? 'text-trust-amber' : 'text-trust-red';
-  const confBg = confPct >= 80 ? 'bg-trust-green/20 border-trust-green/40' : confPct >= 60 ? 'bg-trust-amber/20 border-trust-amber/40' : 'bg-trust-red/20 border-trust-red/40';
+  const { query, intent, answer, confidence = 0, claims = [], evidence = [], contradictions = [], unknowns = [], latency_ms: latencyMs } = data;
+  const confidencePercent = toConfidencePercent(confidence);
+  const confidenceTone = confidencePercent >= 80 ? 'text-trust-green border-trust-green/30 bg-trust-green-bg' : confidencePercent >= 60 ? 'text-trust-amber border-trust-amber/30 bg-trust-amber-bg' : 'text-trust-red border-trust-red/30 bg-trust-red-bg';
+  const supportedClaims = claims.filter((claim) => claim.status?.toUpperCase() === 'SUPPORTED').length;
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 my-6 space-y-6">
-      {/* 1. Main Answer Card */}
-      <div className="rounded-2xl bg-trust-card border border-trust-border shadow-2xl overflow-hidden">
-        {/* Answer Header */}
-        <div className="px-6 py-4 border-b border-trust-border/80 bg-trust-surface/60 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-trust-accent/20 border border-trust-accent/40 text-trust-accent">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-trust-muted block">
-                Evidence-Grounded Synthesis
-              </span>
-              <h3 className="text-sm font-bold text-white line-clamp-1">{query}</h3>
-            </div>
-          </div>
+    <section className="border-x border-b border-white/[.09] bg-[#0c0d1b] px-5 pb-8 sm:px-7">
+      <div className="mx-auto max-w-5xl overflow-hidden rounded-b-[22px] border border-t-0 border-white/[.09] bg-[#121426] shadow-[0_24px_70px_rgba(0,0,0,.22)]">
+        <header className="flex flex-col gap-4 border-b border-white/[.08] bg-gradient-to-r from-white/[.035] to-transparent px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-7">
+          <div className="min-w-0"><div className="editorial-kicker flex items-center gap-2 text-[#a7a9c0]"><Sparkles className="h-3.5 w-3.5 text-[#c7b7ff]" />Grounded synthesis</div><h3 className="mt-2 truncate text-sm font-extrabold tracking-[-.025em] text-white sm:text-base">{query}</h3>{intent && <p className="mt-1 text-[10px] font-mono text-[#8e91aa]">analysis intent: {intent}</p>}</div>
+          <div className="flex shrink-0 items-center gap-2"><span className={`rounded-full border px-3 py-1.5 text-[11px] font-mono font-bold ${confidenceTone}`}>{confidencePercent}% confidence</span>{latencyMs !== undefined && latencyMs !== null && <span className="rounded-full border border-white/[.09] bg-black/[.13] px-3 py-1.5 text-[10px] font-mono text-[#a5a8bd]">{latencyMs}ms</span>}</div>
+        </header>
 
-          <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold border ${confBg} ${confColor}`}>
-              {confPct}% Confidence
-            </span>
-            {latency_ms && (
-              <span className="px-2.5 py-1 rounded-xl text-xs font-mono text-gray-400 bg-trust-surface border border-trust-border">
-                {latency_ms}ms
-              </span>
-            )}
+        <div className="px-5 pt-5 sm:px-7">
+          <div className="flex flex-wrap gap-2 border-b border-white/[.08] pb-4">
+            {[['answer', 'Synthesis', FileText, null], ['claims', `Claims ${claims.length}`, ShieldCheck, null], ['evidence', `Evidence ${evidence.length}`, Layers, null], ...(contradictions.length ? [['contradictions', `Conflicts ${contradictions.length}`, GitCompare, 'danger']] : [])].map(([id, label, Icon, variant]) => <button key={id} onClick={() => setTab(id)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition ${tab === id ? variant === 'danger' ? 'border-trust-red/40 bg-trust-red-bg text-[#ffd3d7]' : 'border-[#a889ff]/45 bg-[#8d6cff]/18 text-white' : 'border-white/[.08] bg-white/[.025] text-[#a9abc0] hover:text-white'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
           </div>
         </div>
 
-        {/* Answer Narrative */}
-        <div className="p-6">
-          <div className="text-sm text-gray-100 leading-relaxed space-y-3 font-sans">
-            {answer ? (
-              <p className="whitespace-pre-line text-sm sm:text-base leading-relaxed">
-                {answer}
-              </p>
-            ) : (
-              <p className="text-trust-muted italic">
-                No grounded conclusion could be synthesized with sufficient evidence.
-              </p>
-            )}
-          </div>
+        {tab === 'answer' && <div className="px-5 py-6 sm:px-7"><div className="grid gap-5 md:grid-cols-[1fr_185px]"><div className="min-w-0"><p className="text-[10px] font-mono uppercase tracking-[.15em] text-[#9497ae]">What the evidence supports</p><div className="mt-3 whitespace-pre-line text-sm leading-7 text-[#ececf5] sm:text-[15px]">{answer || 'No grounded conclusion could be synthesized from the available evidence.'}</div></div><aside className="rounded-2xl border border-white/[.08] bg-black/[.13] p-4"><p className="text-[10px] font-mono uppercase tracking-[.12em] text-[#9194ab]">Review summary</p><p className="mt-3 text-2xl font-extrabold tracking-[-.05em] text-white">{supportedClaims}<span className="text-sm text-[#777b93]">/{claims.length}</span></p><p className="mt-1 text-[11px] leading-5 text-[#a5a8bb]">claims currently linked to supporting evidence</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[.07]"><div className="h-full rounded-full bg-trust-green" style={{ width: `${claims.length ? (supportedClaims / claims.length) * 100 : 0}%` }} /></div></aside></div></div>}
 
-          {/* Inline Navigation Pills */}
-          <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-trust-border/50">
-            <button
-              onClick={() => setActiveTab('answer')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
-                activeTab === 'answer'
-                  ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
-                  : 'bg-trust-surface text-gray-400 hover:text-white'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Synthesis Overview</span>
-            </button>
+        {tab === 'claims' && <div className="space-y-3 px-5 py-6 sm:px-7">{claims.length === 0 ? <EmptyState text="This answer did not produce any atomic claims to inspect." /> : claims.map((claim, index) => { const style = verdictStyle(claim.status); const isOpen = expanded === index; const claimConfidence = toConfidencePercent(claim.confidence); return <article key={claim.id || index} className="overflow-hidden rounded-2xl border border-white/[.09] bg-white/[.025]"><button onClick={() => setExpanded(isOpen ? null : index)} className="flex w-full items-start gap-3 p-4 text-left"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} /><span className="min-w-0 flex-1"><span className="block text-xs font-bold leading-5 text-white">{claim.claim_text || claim.statement || 'Untitled claim'}</span><span className="mt-1 block text-[10px] font-mono text-[#9295ac]">{claim.source_document || 'Workspace source'}{claim.authority ? ` · ${claim.authority}` : ''}</span></span><span className="flex shrink-0 items-center gap-2"><span className={`hidden rounded-full border px-2 py-1 text-[9px] font-mono font-bold sm:block ${style.panel} ${style.color}`}>{style.label}</span>{isOpen ? <ChevronUp className="h-4 w-4 text-[#a7a9bd]" /> : <ChevronDown className="h-4 w-4 text-[#a7a9bd]" />}</span></button>{isOpen && <div className="border-t border-white/[.075] bg-black/[.12] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div className="max-w-2xl"><p className="text-[9px] font-mono uppercase tracking-[.13em] text-[#898ca4]">Linked evidence</p><p className="mt-2 text-xs leading-6 text-[#cdcfdd]">{claim.cited_passage || claim.supporting_evidence || 'No evidence passage is available for this claim.'}</p></div><span className="rounded-full border border-white/[.1] bg-white/[.035] px-2.5 py-1 text-[10px] font-mono text-[#c1c3d1]">{claimConfidence}% match</span></div></div>}</article>; })}</div>}
 
-            <button
-              onClick={() => setActiveTab('claims')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
-                activeTab === 'claims'
-                  ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
-                  : 'bg-trust-surface text-gray-400 hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Atomic Claims ({claims.length})</span>
-            </button>
+        {tab === 'evidence' && <div className="grid gap-3 px-5 py-6 sm:px-7">{evidence.length === 0 ? <EmptyState text="No source passages were returned for this answer." /> : evidence.map((item, index) => <article key={item.id || index} className="rounded-2xl border border-white/[.09] bg-white/[.025] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-start gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-[#7ee8ef]/10 text-trust-cyan"><Quote className="h-4 w-4" /></span><div><h4 className="text-xs font-extrabold text-white">{item.document_title || item.title || 'Document excerpt'}</h4><p className="mt-1 text-[10px] font-mono text-[#9295ab]">evidence {String(index + 1).padStart(2, '0')}{item.authority ? ` · ${item.authority}` : ''}</p></div></div>{item.similarity !== undefined && <span className="rounded-full border border-white/[.1] bg-black/[.14] px-2.5 py-1 text-[10px] font-mono text-[#bfc2d2]">{toConfidencePercent(item.similarity)}% relevance</span>}</div><p className="mt-4 rounded-xl border border-white/[.06] bg-black/[.12] p-3 text-xs leading-6 text-[#d1d2df]">{item.snippet || item.passage || item.text || 'No passage preview available.'}</p></article>)}</div>}
 
-            <button
-              onClick={() => setActiveTab('evidence')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
-                activeTab === 'evidence'
-                  ? 'bg-trust-accent text-white shadow-md shadow-trust-accent/20'
-                  : 'bg-trust-surface text-gray-400 hover:text-white'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Evidence Sources ({evidence.length})</span>
-            </button>
+        {tab === 'contradictions' && <div className="grid gap-3 px-5 py-6 sm:px-7">{contradictions.map((item, index) => <article key={item.id || index} className="rounded-2xl border border-trust-red/30 bg-trust-red-bg p-4"><div className="flex items-start gap-3"><XCircle className="mt-0.5 h-4 w-4 shrink-0 text-trust-red" /><div><p className="text-xs font-extrabold text-[#ffd8dc]">{item.statement || item.title || 'Potential conflict'}</p><p className="mt-2 text-xs leading-6 text-[#eab9c0]">{item.detail || item.conflict_description || item.summary}</p></div></div></article>)}</div>}
 
-            {contradictions.length > 0 && (
-              <button
-                onClick={() => setActiveTab('contradictions')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
-                  activeTab === 'contradictions'
-                    ? 'bg-trust-red text-white shadow-md shadow-trust-red/20'
-                    : 'bg-trust-red-bg text-trust-red border border-trust-red/30'
-                }`}
-              >
-                <GitCompare className="w-3.5 h-3.5" />
-                <span>Contradictions ({contradictions.length})</span>
-              </button>
-            )}
-          </div>
-        </div>
+        {(unknowns.length > 0 && tab === 'answer') && <div className="mx-5 mb-6 flex items-start gap-3 rounded-2xl border border-trust-amber/25 bg-trust-amber-bg p-4 sm:mx-7"><HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-trust-amber" /><div><p className="text-xs font-extrabold text-[#ffe0a0]">What remains uncertain</p><ul className="mt-2 space-y-1 text-xs leading-5 text-[#e1c58d]">{unknowns.slice(0, 3).map((item, index) => <li key={index}>• {typeof item === 'string' ? item : item.summary || item.question}</li>)}</ul></div></div>}
       </div>
-
-      {/* 2. TAB: ATOMIC CLAIM DECOMPOSITION */}
-      {activeTab === 'claims' && (
-        <div className="space-y-3 animate-in fade-in">
-          <div className="flex items-center justify-between pb-1">
-            <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-trust-accent" />
-              Atomic Claim Verification Breakdown
-            </h4>
-            <span className="text-xs font-mono text-trust-muted">
-              {claims.filter((c) => c.status === 'SUPPORTED').length}/{claims.length} Supported
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {claims.map((claim, idx) => {
-              const isSupported = claim.status === 'SUPPORTED';
-              const isContradicted = claim.status === 'CONTRADICTED';
-              const isUnresolved = claim.status === 'UNRESOLVED' || claim.status === 'UNRESOLVED_UNSUPPORTED';
-
-              const badgeColor = isSupported
-                ? 'bg-trust-green-bg border-trust-green/40 text-trust-green'
-                : isContradicted
-                ? 'bg-trust-red-bg border-trust-red/40 text-trust-red'
-                : 'bg-trust-amber-bg border-trust-amber/40 text-trust-amber';
-
-              const StatusIcon = isSupported ? CheckCircle2 : isContradicted ? XCircle : AlertTriangle;
-
-              return (
-                <div
-                  key={claim.id || idx}
-                  className="rounded-xl bg-trust-card border border-trust-border/80 overflow-hidden hover:border-trust-accent/40 transition-colors"
-                >
-                  <div
-                    onClick={() => setExpandedClaim(expandedClaim === idx ? null : idx)}
-                    className="p-4 flex items-start justify-between gap-3 cursor-pointer"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="mt-0.5">
-                        <StatusIcon
-                          className={`w-4 h-4 ${
-                            isSupported
-                              ? 'text-trust-green'
-                              : isContradicted
-                              ? 'text-trust-red'
-                              : 'text-trust-amber'
-                          }`}
-                        />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-white leading-snug">
-                          {claim.claim_text || claim.statement}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] font-mono text-trust-muted">
-                          <span>Source: {claim.source_document || 'Workspace Document'}</span>
-                          {claim.authority && <span>• Authority: {claim.authority}</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${badgeColor}`}>
-                        {claim.status || 'SUPPORTED'}
-                      </span>
-                      {expandedClaim === idx ? (
-                        <ChevronUp className="w-4 h-4 text-trust-muted" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-trust-muted" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expanded Evidence Details */}
-                  {expandedClaim === idx && (
-                    <div className="px-4 pb-4 pt-2 border-t border-trust-border/40 bg-trust-surface/40 space-y-2">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-trust-muted block">
-                        Linked Evidence Passage & Citation:
-                      </span>
-                      <blockquote className="p-3 rounded-lg bg-trust-card border border-trust-border text-xs font-mono text-gray-300 italic">
-                        "{claim.cited_passage || claim.supporting_evidence || 'Direct evidence passage matching semantic embedding.'}"
-                      </blockquote>
-                      {claim.confidence && (
-                        <div className="flex items-center gap-2 text-[11px] font-mono text-gray-400">
-                          <span>Verification Confidence:</span>
-                          <div className="w-24 h-1.5 bg-trust-surface rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-trust-accent"
-                              style={{ width: `${Math.round(claim.confidence * 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-white font-bold">
-                            {Math.round(claim.confidence * 100)}%
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 3. TAB: EVIDENCE SOURCES */}
-      {activeTab === 'evidence' && (
-        <div className="space-y-3 animate-in fade-in">
-          <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2 pb-1">
-            <Layers className="w-4 h-4 text-trust-cyan" />
-            Retrieved Evidence Passages
-          </h4>
-
-          <div className="grid gap-3">
-            {evidence.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl bg-trust-card border border-trust-border/80 space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-bold text-white">
-                      [E{idx + 1}] {item.document_title || item.title || 'Document Excerpt'}
-                    </span>
-                    {item.authority && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-trust-accent/20 border border-trust-accent/30 text-trust-accent">
-                        {item.authority}
-                      </span>
-                    )}
-                  </div>
-                  {item.similarity && (
-                    <span className="text-[10px] font-mono text-trust-green bg-trust-green-bg px-2 py-0.5 rounded border border-trust-green/30">
-                      Sim: {(item.similarity * 100).toFixed(0)}%
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs font-mono text-gray-300 leading-relaxed bg-trust-surface/60 p-3 rounded-lg border border-trust-border/40">
-                  {item.snippet || item.passage || item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 4. CONTRADICTIONS & UNKNOWNS */}
-      {(contradictions.length > 0 || unknowns.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {/* Contradictions Panel */}
-          {contradictions.length > 0 && (
-            <div className="p-4 rounded-xl bg-trust-card border border-trust-red/40 space-y-2">
-              <div className="flex items-center space-x-2 text-trust-red">
-                <GitCompare className="w-4 h-4" />
-                <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
-                  Contradictions & Evolution ({contradictions.length})
-                </h4>
-              </div>
-              <div className="space-y-2">
-                {contradictions.map((c, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-trust-red-bg text-xs space-y-1">
-                    <p className="font-semibold text-trust-red">{c.statement || c.title}</p>
-                    <p className="text-gray-300 text-[11px] font-mono">
-                      {c.detail || c.conflict_description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Unknowns & Uncertainty Panel */}
-          {unknowns.length > 0 && (
-            <div className="p-4 rounded-xl bg-trust-card border border-trust-amber/40 space-y-2">
-              <div className="flex items-center space-x-2 text-trust-amber">
-                <HelpCircle className="w-4 h-4" />
-                <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
-                  Uncertainties & Knowledge Gaps ({unknowns.length})
-                </h4>
-              </div>
-              <div className="space-y-1.5">
-                {unknowns.map((u, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-lg bg-trust-amber-bg text-xs text-gray-200 font-mono"
-                  >
-                    • {typeof u === 'string' ? u : u.summary || u.question}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    </section>
   );
+}
+
+function EmptyState({ text }) {
+  return <div className="rounded-2xl border border-dashed border-white/[.12] bg-white/[.02] px-5 py-10 text-center text-xs text-[#9a9db3]"><AlertTriangle className="mx-auto mb-3 h-5 w-5 text-[#85889f]" />{text}</div>;
 }

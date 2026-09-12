@@ -1,36 +1,6 @@
 import React from 'react';
-import { Shield, ExternalLink, Cpu } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
-  return (
-    <footer className="mt-20 border-t border-trust-border/80 bg-trust-surface/40 py-8">
-      <div className="max-w-7xl mx-auto px-4 text-center sm:flex sm:items-center sm:justify-between text-xs text-trust-muted font-mono">
-        <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-0">
-          <Shield className="w-4 h-4 text-trust-accent" />
-          <span>TrustLens AI Reliability Platform</span>
-          <span>•</span>
-          <span className="text-gray-400">Production Demo</span>
-        </div>
-
-        <div className="flex items-center justify-center space-x-4">
-          <span className="flex items-center space-x-1">
-            <Cpu className="w-3.5 h-3.5 text-trust-cyan" />
-            <span>MiniLM2-L6 NLI</span>
-          </span>
-          <span>•</span>
-          <span>OpenAI Grounded Generation</span>
-          <span>•</span>
-          <a
-            href="https://github.com/TopoVista/trustlens"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors inline-flex items-center space-x-1"
-          >
-            <span>GitHub</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
-      </div>
-    </footer>
-  );
+  return <footer className="border-t border-white/[.075] bg-[#090a16]/70 px-5 py-7"><div className="mx-auto flex max-w-[1440px] flex-col gap-3 text-[10px] font-mono text-[#85899f] sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-[#b9a5ff]" /><span>TrustLens · evidence-first workspace intelligence</span></div><div className="flex items-center gap-4"><span>Keep your sources reviewable.</span><a href="https://github.com/TopoVista/trustlens" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#c1c3d4] transition hover:text-white">Project source <ArrowUpRight className="h-3 w-3" /></a></div></div></footer>;
 }

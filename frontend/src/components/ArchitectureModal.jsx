@@ -1,129 +1,17 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShieldCheck, Cpu, Layers, Sparkles, Scissors, CheckCheck, FileText } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BrainCircuit, CheckCheck, Database, FileSearch, Network, ShieldCheck, X } from 'lucide-react';
+
+const STEPS = [
+  ['01', 'Ingest a private source', 'A note or text-based file is stored in the active, user-owned workspace and divided into retrievable passages.', Database, 'text-trust-cyan'],
+  ['02', 'Retrieve the relevant record', 'The query is matched against the workspace’s passages. OpenAI embeddings are used when available, with a deterministic fallback for degraded operation.', FileSearch, 'text-[#c7b7ff]'],
+  ['03', 'Plan the analysis', 'The planner selects only the specialist capabilities needed for the query: claims, evidence, entities, timelines, contradictions, gaps, and synthesis.', BrainCircuit, 'text-trust-amber'],
+  ['04', 'Link claims to evidence', 'The response identifies verifiable claims and carries their supporting passages, source authority, and contradictions into the answer contract.', CheckCheck, 'text-trust-green'],
+  ['05', 'Make uncertainty explicit', 'TrustLens distinguishes supported, contradicted, and unresolved claims. Unresolved means the evidence is insufficient—not that a statement is false.', ShieldCheck, 'text-[#ffb3bb]'],
+  ['06', 'Keep the record reviewable', 'Documents, evidence health, the knowledge map, timeline, and workspace-specific policies remain available after the answer is produced.', Network, 'text-trust-cyan']
+];
 
 export default function ArchitectureModal({ isOpen, onClose }) {
   if (!isOpen) return null;
-
-  const steps = [
-    {
-      num: '01',
-      title: 'Semantic Vector Retrieval',
-      tech: 'all-MiniLM-L6-v2 + FAISS IndexFlatIP',
-      desc: 'Retrieves top-k evidence documents from a 450-document database systems corpus using normalized inner-product cosine similarity.',
-      icon: Layers,
-      color: 'text-trust-cyan'
-    },
-    {
-      num: '02',
-      title: 'Grounded LLM Generation',
-      tech: 'OpenAI API (gpt-5.6-luna / configurable)',
-      desc: 'Prompts OpenAI with strictly bounded instructions forbidding hallucinations or external knowledge beyond the retrieved context.',
-      icon: Sparkles,
-      color: 'text-trust-accent'
-    },
-    {
-      num: '03',
-      title: 'Claim Decomposition',
-      tech: 'spaCy NLP Sentence Segmentation',
-      desc: 'Breaks down the generated answer into isolated, testable atomic claims while conservatively preserving modal hedges.',
-      icon: Scissors,
-      color: 'text-pink-400'
-    },
-    {
-      num: '04',
-      title: 'Independent Claim Retrieval',
-      tech: 'FAISS Top-3 Claim Search',
-      desc: 'Independently retrieves evidence for each individual claim rather than relying solely on the original prompt context.',
-      icon: Cpu,
-      color: 'text-amber-400'
-    },
-    {
-      num: '05',
-      title: 'Natural Language Inference (NLI)',
-      tech: 'cross-encoder/nli-MiniLM2-L6-H768',
-      desc: 'Evaluates (premise, hypothesis) pairs to strictly classify each claim as SUPPORTED (entailment), CONTRADICTED, or NOT_SUPPORTED.',
-      icon: CheckCheck,
-      color: 'text-trust-green'
-    },
-    {
-      num: '06',
-      title: 'Faithfulness Scoring & Observability',
-      tech: 'Confidence-Weighted Grounding Metrics',
-      desc: 'Calculates overall answer faithfulness, flags unsupported hallucinations, and renders claim-level visual grounding.',
-      icon: ShieldCheck,
-      color: 'text-emerald-400'
-    }
-  ];
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2 }}
-          className="glass-panel w-full max-w-3xl rounded-2xl p-6 sm:p-8 border border-trust-border shadow-2xl relative max-h-[90vh] overflow-y-auto"
-        >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-5 right-5 p-2 rounded-lg bg-trust-surface hover:bg-trust-border text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {/* Modal header */}
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-trust-accent/20 border border-trust-accent/30 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-trust-accent" />
-            </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">How TrustLens Works</h2>
-          </div>
-          <p className="text-xs text-trust-muted mb-6">
-            The core principle: <strong className="text-gray-200">Generation is not verification.</strong> TrustLens decouples answer synthesis from independent claim grounding.
-          </p>
-
-          {/* Steps list */}
-          <div className="space-y-4">
-            {steps.map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <div
-                  key={idx}
-                  className="flex items-start space-x-4 p-3.5 rounded-xl bg-trust-surface/60 border border-trust-border/60 hover:border-trust-border transition-colors"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-trust-card border border-trust-border font-mono text-xs font-bold text-gray-400 shrink-0">
-                    {s.num}
-                  </div>
-
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-white flex items-center space-x-2">
-                        <Icon className={`w-4 h-4 ${s.color}`} />
-                        <span>{s.title}</span>
-                      </h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-trust-card text-trust-muted border border-trust-border/50">
-                        {s.tech}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-300 leading-relaxed">
-                      {s.desc}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Semantic distinction note */}
-          <div className="mt-6 p-4 rounded-xl bg-trust-amber-bg border border-trust-amber/30 text-xs text-trust-amber/90 leading-relaxed">
-            <strong className="text-trust-amber font-semibold block mb-1">Important Semantic Note:</strong>
-            A label of <code className="px-1 py-0.5 rounded bg-trust-amber/20 font-mono text-white">NOT_SUPPORTED</code> does not imply the model made a false statement; rather, it guarantees that the retrieved corpus evidence was insufficient to formally entail the claim.
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
+  return <AnimatePresence><div className="fixed inset-0 z-50 grid place-items-center bg-[#050610]/80 p-4 backdrop-blur-md"><motion.div initial={{ opacity: 0, y: 10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: .98 }} transition={{ duration: .18 }} className="glass-panel max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[24px] p-5 shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-4"><div><div className="editorial-kicker text-[#a2a5bc]">Architecture brief</div><h2 className="mt-2 text-2xl font-extrabold tracking-[-.055em] text-white">How TrustLens earns an answer.</h2><p className="mt-3 max-w-xl text-xs leading-5 text-[#afb1c3]">The product separates what was generated from what the workspace can actually support.</p></div><button onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#a5a8bc] transition hover:bg-white/[.07] hover:text-white"><X className="h-4 w-4" /></button></div><div className="mt-7 space-y-3">{STEPS.map(([number, title, copy, Icon, color]) => <article key={number} className="flex gap-4 rounded-[18px] border border-white/[.09] bg-white/[.025] p-4"><span className="font-mono text-[10px] text-[#777a92]">{number}</span><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/[.035] ${color}`}><Icon className="h-4 w-4" /></span><div><h3 className="text-xs font-extrabold text-white">{title}</h3><p className="mt-1.5 text-xs leading-5 text-[#afb1c3]">{copy}</p></div></article>)}</div><div className="mt-5 rounded-2xl border border-trust-amber/25 bg-trust-amber-bg p-4 text-xs leading-5 text-[#f3d99c]"><b className="text-[#ffe5ad]">Important:</b> a confidence percentage is an evidence-grounding signal, not proof of objective truth. Review the linked source passages for consequential decisions.</div></motion.div></div></AnimatePresence>;
 }

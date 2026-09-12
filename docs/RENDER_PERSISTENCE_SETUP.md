@@ -1,35 +1,52 @@
 # TrustLens durable storage on Render
 
-Render Free web-service files are ephemeral: local SQLite data is deleted on a
-restart, redeploy, or idle spin-down. TrustLens now uses a durable Postgres
-database whenever `DATABASE_URL` is configured.
+## Why this step matters
 
-## One-time setup
+Render Free web-service files are ephemeral. SQLite works for local development, but documents stored on a free service's local disk can disappear after restart, redeploy, or idle spin-down. TrustLens uses durable Postgres automatically when the running backend has `DATABASE_URL`.
 
-The repository's `render.yaml` declares a `trustlens-postgres` database and
-wires its internal connection string to `DATABASE_URL`. If the current service
-is managed as a Render Blueprint, sync the Blueprint in the Render Dashboard
-to create the database and apply that variable.
+## Blueprint deployment
 
-If the existing service was created manually instead of from the Blueprint:
+The repository's `render.yaml` declares a Postgres database named `trustlens-postgres` and maps its internal connection string to the web service's `DATABASE_URL`. For a Blueprint-managed service:
 
-1. In Render, create a **Postgres** database in the same region as the API.
-2. Copy its **internal** connection string.
-3. Add it to the API service as the secret environment variable
-   `DATABASE_URL`.
+1. Open the Render Blueprint for this repository.
+2. Sync or apply the Blueprint so Render creates or connects the database.
+3. Verify the API service environment shows `DATABASE_URL` from the database binding.
+4. Redeploy the API service.
+
+## Existing manually created service
+
+For a Render service created outside the Blueprint:
+
+1. Create a Render Postgres database in the same region as the API.
+2. Copy the database **internal** connection string.
+3. Add it to the API service as secret `DATABASE_URL`.
 4. Redeploy the API.
 
-Do not commit the connection string to Git or place it in a frontend `VITE_`
-variable. The API's storage panel shows **Durable DB** once it is connected.
+Do not put this connection string in Git, `backend/.env.example`, a Vercel environment variable, or any `VITE_` variable.
 
-## Important Free-plan limit
+## Verify the running service
 
-Render's Free Postgres option persists documents across API restarts, but
-expires after 30 days. Upgrade the database before that deadline for lasting
-production retention and backups. A paid web service plus a persistent disk is
-an alternative, but managed Postgres is the safer fit for TrustLens's
-relational workspace data.
+Sign in to the deployed product or send an authenticated request to:
 
-Documents that disappeared before Postgres was connected were stored only on
-the old ephemeral filesystem and cannot be recovered from Render. Re-ingest
-them after the durable database is active.
+```text
+GET https://YOUR-RENDER-SERVICE.onrender.com/api/me/storage
+```
+
+Look for:
+
+```json
+{
+  "storage_backend": "postgres",
+  "durable": true
+}
+```
+
+`storage_backend: "sqlite"` and `durable: false` means the service did not receive a usable `DATABASE_URL`. The service can still run, but its source data is not durable on Render Free.
+
+## What happens to earlier documents
+
+Documents that were stored in an ephemeral SQLite deployment before Postgres was connected cannot be restored from the new database automatically. Re-ingest them once the storage endpoint confirms durable Postgres.
+
+## Plan lifecycle
+
+The availability and retention of a free Postgres database are controlled by Render's current plan terms. Check those terms before treating the free tier as a permanent backup or production-retention solution. For stronger operational guarantees, use an appropriate managed-database plan and backups.
