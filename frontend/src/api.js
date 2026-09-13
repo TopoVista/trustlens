@@ -157,6 +157,69 @@ export async function queryKnowledge(workspaceId, query) {
   return res.json();
 }
 
+/**
+ * Run a workspace query over a POST-based SSE stream. Status messages are
+ * transient pipeline updates; the final `result` event is the normal answer
+ * contract consumed by the rest of the UI.
+ */
+export async function queryKnowledgeStream(workspaceId, query, onStatus = () => {}) {
+  const headers = await buildHeaders({
+    "Content-Type": "application/json",
+    "Accept": "text/event-stream",
+  });
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/query/stream`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query }),
+  });
+  if (res.status === 404) {
+    // During a rolling Vercel/Render deployment the SPA can arrive before the
+    // newly deployed API route. Preserve the established query workflow until
+    // the streaming backend is available.
+    onStatus("Running the verification path.");
+    return queryKnowledge(workspaceId, query);
+  }
+  if (!res.ok || !res.body) {
+    let msg = "Query stream failed";
+    try { const body = await res.json(); msg = body.detail || msg; } catch {}
+    throw new Error(msg);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result = null;
+
+  const consumeEvent = (block) => {
+    const lines = block.split("\n");
+    const event = lines.find((line) => line.startsWith("event:"))?.slice(6).trim() || "message";
+    const data = lines
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trim())
+      .join("\n");
+    if (!data) return;
+    const payload = JSON.parse(data);
+    if (event === "status") onStatus(payload.message || "Working on your evidence…");
+    if (event === "result") result = payload;
+    if (event === "error") throw new Error(payload.message || "Knowledge query failed.");
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    let separator = buffer.indexOf("\n\n");
+    while (separator !== -1) {
+      consumeEvent(buffer.slice(0, separator));
+      buffer = buffer.slice(separator + 2);
+      separator = buffer.indexOf("\n\n");
+    }
+    if (done) break;
+  }
+
+  if (!result) throw new Error("Query stream ended before an answer was returned.");
+  return result;
+}
+
 export async function checkHealth() {
   try {
     const res = await fetch(`${API_BASE}/health`, {

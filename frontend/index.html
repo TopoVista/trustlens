@@ -1,18 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TrustLens — AI Reliability & RAG Claim Verification</title>
     <meta name="description" content="Independently verify RAG generation claim-by-claim using semantic retrieval and NLI inference. Generation is not verification." />
-    <!-- Modern Inter typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#f7f3ed" />
+    <style>
+      html { background: #f7f3ed; }
+      body { margin: 0; min-width: 320px; background: #f7f3ed; color: #28251f; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+      #root { min-height: 100vh; }
+      .tl-boot { display: grid; min-height: 100vh; place-items: center; padding: 2rem; }
+      .tl-boot__card { width: min(100%, 640px); border: 1px solid #ddd5c8; border-radius: 18px; background: #fffcf7; padding: 2rem; }
+      .tl-boot__mark { display: inline-grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #28251f; color: #fffcf7; font-weight: 700; }
+      .tl-boot__line { height: 10px; margin-top: 1rem; border-radius: 99px; background: #efe8dd; }
+      .tl-boot__line--short { width: 58%; }
+    </style>
   </head>
-  <body class="bg-trust-bg text-gray-100 antialiased min-h-screen selection:bg-trust-accent/30 selection:text-white">
-    <div id="root"></div>
+  <body>
+    <div id="root"><main class="tl-boot" aria-busy="true" aria-label="Loading TrustLens"><div class="tl-boot__card"><span class="tl-boot__mark">T</span><div class="tl-boot__line tl-boot__line--short"></div><div class="tl-boot__line"></div></div></main></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

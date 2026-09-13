@@ -13,6 +13,8 @@ answer is not proof; the evidence behind it must remain reviewable.
   declared authority level, ingestion status, and semantic chunk count.
 - Evidence-grounded workspace queries with an answer contract for synthesis,
   atomic claims, retrieved evidence, contradictions, and unresolved items.
+- A POST-based Server-Sent Events query stream that displays one current,
+  backend-reported verification stage while an answer is being prepared.
 - Evidence health metrics, proactive discovery signals, an entity map, a
   chronological timeline, and workspace-specific verification policies.
 - A React/Vite frontend with an original TrustLens verification visual and an

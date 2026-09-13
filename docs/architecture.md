@@ -25,6 +25,12 @@ FastAPI routes ------------------------> auth and ownership checks
 
 The UI workflow is: select or create a workspace, ingest text-based source material with authority, refresh the source record, ask a question, and inspect synthesis, claims, evidence, conflicts, and unresolved items.
 
+The workspace query stream uses a POST response with `text/event-stream`.
+Planner callbacks report the current completed or active stage, and the client
+shows only the latest line while it waits for the final `result` event. This is
+not simulated progress; the messages are emitted at the planner's retrieval,
+claim, evidence, intent-specific, synthesis, and answer-packaging stages.
+
 The client normalizes confidence for display because legacy and workspace responses can use different scales. A value in `[0, 1]` becomes a percentage; a value already over `1` is treated as a percentage. Both forms are clamped to `[0, 100]`.
 
 ## API and identity

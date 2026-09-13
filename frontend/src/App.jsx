@@ -4,7 +4,6 @@ import {
   Activity, AlertCircle, ArrowUpRight, Compass, FileText, GitBranch,
   HardDrive, Layers, ShieldCheck, Sliders, Sparkles
 } from 'lucide-react';
-import heroArtwork from './assets/trustlens-verification-hero.png';
 import KnowledgeHeader from './components/KnowledgeHeader.jsx';
 import QueryConsole from './components/QueryConsole.jsx';
 import SpecialistCanvas from './components/SpecialistCanvas.jsx';
@@ -20,7 +19,7 @@ import {
   addWorkspaceRule, checkHealth, createWorkspace, getUserStorageInfo,
   getWorkspaceDiscoveries, getWorkspaceDocuments, getWorkspaceEntities,
   getWorkspaceHealth, getWorkspaceRules, getWorkspaceTimeline, listWorkspaces,
-  queryKnowledge, setAuthContext, uploadDocument
+  queryKnowledgeStream, setAuthContext, uploadDocument
 } from './api.js';
 
 const VIEWS = [
@@ -30,6 +29,20 @@ const VIEWS = [
   { id: 'graph', label: 'Knowledge map', icon: GitBranch },
   { id: 'rules', label: 'Verification rules', icon: Sliders }
 ];
+
+const VIEW_PATHS = {
+  query: '/',
+  documents: '/documents',
+  health: '/health',
+  graph: '/map',
+  rules: '/rules'
+};
+
+function viewFromLocation() {
+  if (typeof window === 'undefined') return 'query';
+  const entry = Object.entries(VIEW_PATHS).find(([, path]) => path === window.location.pathname);
+  return entry?.[0] || 'query';
+}
 
 function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = null, isAuthReady = true }) {
   const [workspaces, setWorkspaces] = useState([]);
@@ -41,13 +54,20 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
   const [timelineData, setTimelineData] = useState([]);
   const [rules, setRules] = useState([]);
   const [workspaceDocuments, setWorkspaceDocuments] = useState([]);
-  const [activeView, setActiveView] = useState('query');
+  const [activeView, setActiveView] = useState(viewFromLocation);
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
   const [isHealthy, setIsHealthy] = useState(true);
   const [isQuerying, setIsQuerying] = useState(false);
+  const [pipelineStatus, setPipelineStatus] = useState(null);
   const [queryResult, setQueryResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+
+  useEffect(() => {
+    const syncView = () => setActiveView(viewFromLocation());
+    window.addEventListener('popstate', syncView);
+    return () => window.removeEventListener('popstate', syncView);
+  }, []);
 
   useEffect(() => {
     if (isClerkConfigured && !isAuthReady) return undefined;
@@ -151,19 +171,34 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
     return result;
   };
 
+  const navigateView = (view) => {
+    if (!VIEW_PATHS[view]) return;
+    if (window.location.pathname !== VIEW_PATHS[view]) {
+      window.history.pushState({}, '', VIEW_PATHS[view]);
+    }
+    setActiveView(view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleRunQuery = async (queryText) => {
     if (!activeWorkspace?.id || isQuerying) return;
     setErrorMessage(null);
     setIsQuerying(true);
+    setPipelineStatus('Preparing the verification path.');
     try {
-      const result = await queryKnowledge(activeWorkspace.id, queryText);
+      const result = await queryKnowledgeStream(
+        activeWorkspace.id,
+        queryText,
+        setPipelineStatus
+      );
       setQueryResult(result);
-      setActiveView('query');
+      navigateView('query');
     } catch (err) {
       console.error('Knowledge query failed:', err);
       setErrorMessage(err.message || 'Execution error during multi-agent analysis.');
     } finally {
       setIsQuerying(false);
+      setPipelineStatus(null);
     }
   };
 
@@ -183,87 +218,57 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
           if (activeWorkspace) refreshWorkspaceData(activeWorkspace.id);
           refreshStorageStats();
         }}
+        activeView={activeView}
+        onNavigate={navigateView}
       />
 
-      <main className="flex-1 px-3 pb-14 sm:px-6">
-        <section className="product-hero">
-          <img className="hero-art" src={heroArtwork} alt="Abstract glass documents connected by an evidence orbit" />
-          <div className="hero-content flex min-h-[510px] flex-col justify-center px-6 py-12 sm:px-12 lg:px-16">
-            <div className="hero-eyebrow editorial-kicker w-fit">
-              <ShieldCheck className="h-3.5 w-3.5 text-trust-cyan" />
-              Private evidence workspace
-            </div>
-            <h1 className="hero-title mt-6 text-white">
-              Answers you can <em>trace</em> back to your documents.
-            </h1>
-            <p className="mt-6 max-w-xl text-sm leading-7 text-[#b9bbcf] sm:text-base">
-              Bring your notes, reports, and working files together. TrustLens extracts the signal, tests claims against evidence, and makes uncertainty visible.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button onClick={() => setIsIngestOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-extrabold text-[#101122] shadow-xl transition hover:-translate-y-0.5 hover:bg-[#e8e4ff]">
-                Add source material <ArrowUpRight className="h-4 w-4" />
-              </button>
-              <button onClick={() => setIsArchitectureOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[.045] px-5 py-3 text-xs font-bold text-white transition hover:bg-white/[.09]">
-                How verification works <Compass className="h-4 w-4 text-trust-cyan" />
-              </button>
-            </div>
-            <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[11px] font-mono text-[#aeb1c8]">
-              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-trust-green shadow-[0_0_12px_#61d9a8]" />workspace-isolated</span>
-              <span className="flex items-center gap-2"><Layers className="h-3.5 w-3.5 text-trust-cyan" />evidence linked</span>
-              <span className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-[#c7b7ff]" />uncertainty surfaced</span>
-            </div>
-          </div>
-          <div className="hero-orbit text-[11px] font-mono text-[#c4c6d7]">
-            <span className="text-[#f1efff]">Evidence network</span>
-            <p className="mt-2 leading-5 text-[#9295ad]">Sources, claims, and their provenance stay connected in one reviewable workspace.</p>
-          </div>
-        </section>
+      <main className="flex-1 pb-14">
+        <div className="tl-shell">
+          {activeView === 'query' && (
+            <section className="tl-hero">
+              <div className="tl-hero-copy">
+                <div className="editorial-kicker flex items-center gap-2 tl-status"><ShieldCheck className="h-3.5 w-3.5" />Private evidence workspace</div>
+                <h1 className="tl-hero-title">Answers you can <em>trace</em> to the record.</h1>
+                <p className="tl-hero-description">Bring in your working documents, ask a precise question, and review the evidence that supports—or limits—the answer.</p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button onClick={() => setIsIngestOpen(true)} className="tl-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold">Add source material <ArrowUpRight className="h-4 w-4" /></button>
+                  <button onClick={() => setIsArchitectureOpen(true)} className="tl-secondary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold">How it works <Compass className="h-4 w-4 tl-status" /></button>
+                </div>
+              </div>
+              <div className="tl-assurance text-xs">
+                <div><p className="editorial-kicker tl-status">01 · private</p><p className="mt-2 font-semibold">One workspace, one evidence record.</p></div>
+                <div><p className="editorial-kicker tl-status">02 · linked</p><p className="mt-2 font-semibold">Claims stay beside their source passages.</p></div>
+                <div><p className="editorial-kicker tl-status">03 · candid</p><p className="mt-2 font-semibold">Uncertainty is part of the answer.</p></div>
+              </div>
+            </section>
+          )}
 
-        {errorMessage && (
-          <div className="mx-auto max-w-[1210px] pt-5">
-            <div className="flex items-start gap-3 rounded-2xl border border-trust-red/35 bg-trust-red-bg px-4 py-3 text-xs text-[#ffb1b7]">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <div><span className="font-bold text-white">Action needed.</span> {errorMessage}</div>
-            </div>
-          </div>
-        )}
+          {errorMessage && <div className="mt-5 flex items-start gap-3 rounded-[18px] border border-trust-red/25 bg-trust-red-bg px-4 py-3 text-xs text-[#7c302b]"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><div><span className="font-bold">Action needed.</span> {errorMessage}</div></div>}
 
-        <section className="workspace-stage mt-8">
-          <div className="workspace-intro px-5 pt-5 sm:px-7 sm:pt-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <section key={activeView} className="tl-page">
+            <div className="tl-workspace-bar">
               <div>
-                <div className="editorial-kicker text-[#9598b2]">Your evidence desk</div>
-                <h2 className="mt-2 text-xl font-bold tracking-[-.04em] text-white sm:text-2xl">
-                  {activeWorkspace?.name || 'Preparing your workspace'}
-                </h2>
-                <p className="mt-1 text-xs text-trust-muted">Ask a question, inspect the evidence, or add material to strengthen the record.</p>
+                <div className="editorial-kicker tl-status">{activeView === 'query' ? 'Evidence desk' : 'Workspace'}</div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-.055em] text-[#28251f]">{activeView === 'query' ? activeWorkspace?.name || 'Preparing your workspace' : VIEWS.find((view) => view.id === activeView)?.label}</h2>
+                <p className="mt-1 text-xs text-trust-muted">{activeView === 'query' ? 'Ask the record and inspect the result without leaving the evidence.' : activeWorkspace?.name || 'Your evidence workspace'}</p>
               </div>
               <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[#bfc1d1]"><FileText className="h-3 w-3 text-trust-cyan" />{workspaceDocuments.length} sources</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[#bfc1d1]"><HardDrive className="h-3 w-3 text-[#c7b7ff]" />{storageStats?.durable ? 'durable storage' : 'workspace storage'}</span>
+                <span className="tl-pill inline-flex items-center gap-1.5 px-3 py-1.5"><FileText className="h-3 w-3 tl-status" />{workspaceDocuments.length} sources</span>
+                <span className="tl-pill inline-flex items-center gap-1.5 px-3 py-1.5"><HardDrive className="h-3 w-3 tl-status" />{storageStats?.durable ? 'durable' : 'workspace'} storage</span>
               </div>
             </div>
-            <div className="workspace-nav mt-6">
-              {VIEWS.map(({ id, label, icon: Icon }) => (
-                <button key={id} onClick={() => setActiveView(id)} className={`workspace-tab ${activeView === id ? 'is-active' : ''}`}>
-                  <Icon className="h-3.5 w-3.5" /> {label}{id === 'documents' ? ` (${workspaceDocuments.length})` : ''}
-                </button>
-              ))}
+            <nav aria-label="Workspace pages" className="tl-tab-row border-y border-[var(--tl-line-300)]">
+              {VIEWS.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => navigateView(id)} className={`tl-tab ${activeView === id ? 'is-active' : ''}`}><Icon className="h-3.5 w-3.5" />{label}{id === 'documents' ? ` (${workspaceDocuments.length})` : ''}</button>)}
+            </nav>
+            <div className="mt-4 tl-panel overflow-hidden">
+              {activeView === 'query' && <><QueryConsole onRunQuery={handleRunQuery} isLoading={isQuerying} progressMessage={pipelineStatus} activeWorkspace={activeWorkspace} /><SpecialistCanvas isExecuting={isQuerying} activePlanTrace={queryResult?.plan_trace || []} intent={queryResult?.intent} latencyMs={queryResult?.latency_ms} /><AnswerContractPanel data={queryResult} /></>}
+              {activeView === 'documents' && <DocumentLibrary documents={workspaceDocuments} activeWorkspace={activeWorkspace} />}
+              {activeView === 'health' && <HealthAuditDashboard healthData={healthData} discoveries={discoveries} activeWorkspace={activeWorkspace} />}
+              {activeView === 'graph' && <KnowledgeGraphTimeline entitiesData={entitiesData} timelineData={timelineData} />}
+              {activeView === 'rules' && <SemanticRulesManager rules={rules} onAddRule={handleAddRule} activeWorkspace={activeWorkspace} />}
             </div>
-          </div>
-
-          {activeView === 'query' && (
-            <>
-              <QueryConsole onRunQuery={handleRunQuery} isLoading={isQuerying} activeWorkspace={activeWorkspace} />
-              <SpecialistCanvas isExecuting={isQuerying} activePlanTrace={queryResult?.plan_trace || []} intent={queryResult?.intent} latencyMs={queryResult?.latency_ms} />
-              <AnswerContractPanel data={queryResult} />
-            </>
-          )}
-          {activeView === 'documents' && <DocumentLibrary documents={workspaceDocuments} activeWorkspace={activeWorkspace} />}
-          {activeView === 'health' && <HealthAuditDashboard healthData={healthData} discoveries={discoveries} activeWorkspace={activeWorkspace} />}
-          {activeView === 'graph' && <KnowledgeGraphTimeline entitiesData={entitiesData} timelineData={timelineData} />}
-          {activeView === 'rules' && <SemanticRulesManager rules={rules} onAddRule={handleAddRule} activeWorkspace={activeWorkspace} />}
-        </section>
+          </section>
+        </div>
       </main>
 
       <IngestionModal isOpen={isIngestOpen} onClose={() => setIsIngestOpen(false)} onIngest={handleIngestDocument} activeWorkspace={activeWorkspace} />

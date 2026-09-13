@@ -1,19 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         trust: {
-          bg: '#070813', surface: '#101123', card: '#15172a', border: '#2b2e47', muted: '#999cb5',
-          accent: '#8d6cff', 'accent-hover': '#a489ff', cyan: '#7ee8ef', green: '#61d9a8',
-          'green-bg': 'rgba(97, 217, 168, 0.12)', amber: '#f5c86b', 'amber-bg': 'rgba(245, 200, 107, 0.12)',
-          red: '#ff858f', 'red-bg': 'rgba(255, 133, 143, 0.12)'
+          bg: '#f7f3ed', surface: '#fffcf7', card: '#fffcf7', border: '#ddd5c8', muted: '#6d665d',
+          accent: '#b56f52', 'accent-hover': '#914e38', cyan: '#4c695c', green: '#4c695c',
+          'green-bg': '#dfe8df', amber: '#d28f45', 'amber-bg': '#f8ead5',
+          red: '#b14f45', 'red-bg': '#f7dfdb'
         }
       },
       fontFamily: {
-        sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Manrope', 'Avenir Next', 'Avenir', 'Segoe UI', 'sans-serif'],
         mono: ['DM Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
       }
     }

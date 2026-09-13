@@ -68,3 +68,21 @@ def test_comparison_intent_skips_claim_evidence_pipeline():
     assert "claim_detective" not in planner.registry.calls
     assert "evidence_agent" not in planner.registry.calls
     assert planner.registry.contexts["synthesis_agent"]["comparisons"]
+
+
+def test_planner_reports_real_stage_updates_to_callback():
+    planner = object.__new__(AnalysisPlanner)
+    planner.repo = _Repo()
+    planner.retriever = _Retriever()
+    planner.registry = _Registry()
+    updates = []
+
+    async def report(message):
+        updates.append(message)
+
+    asyncio.run(planner.execute_plan("ws", "Compare the two reports", on_progress=report))
+
+    assert updates[0] == "Classified the question and selected the relevant verification path."
+    assert "Searching the workspace for relevant source passages." in updates
+    assert any("Comparing the most relevant source passages." == update for update in updates)
+    assert updates[-1] == "Packaging the answer contract and linked evidence for review."

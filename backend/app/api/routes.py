@@ -1,9 +1,12 @@
 """FastAPI API routes for TrustLens"""
+import asyncio
+import json
 import sys
 import time
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Request, status, Depends
+from fastapi.responses import StreamingResponse
 from app.api.auth import AuthUser, enforce_workspace_ownership, get_current_user, get_current_user_context
 from app.knowledge.user_storage import UserKnowledgeContext, get_user_storage_stats
 from app.api.schemas import (
@@ -38,6 +41,11 @@ from app.planner.planner import AnalysisPlanner
 
 logger = logging.getLogger("trustlens.routes")
 router = APIRouter()
+
+
+def _sse_event(event: str, payload: dict) -> str:
+    """Encode a single Server-Sent Event without allowing line injection."""
+    return f"event: {event}\ndata: {json.dumps(payload, separators=(',', ':'))}\n\n"
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -484,6 +492,64 @@ async def query_workspace(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Knowledge query failed: {str(e)}"
         )
+
+
+@router.post("/api/workspaces/{workspace_id}/query/stream")
+async def stream_workspace_query(
+    workspace_id: str,
+    request: KnowledgeQueryRequest,
+    user: AuthUser = Depends(get_current_user),
+    ctx: UserKnowledgeContext = Depends(get_current_user_context),
+):
+    """Stream one current planner stage at a time, followed by the answer contract."""
+    enforce_workspace_ownership(user, workspace_id, ctx.repo)
+
+    async def event_stream():
+        updates: asyncio.Queue = asyncio.Queue()
+
+        async def report(message: str) -> None:
+            updates.put_nowait(("status", {"message": message}))
+            # Let the response generator flush this status before a synchronous
+            # retrieval or another CPU-bound specialist starts its next stage.
+            await asyncio.sleep(0)
+
+        async def execute() -> None:
+            try:
+                result = await ctx.planner.execute_plan(
+                    workspace_id, request.query, on_progress=report
+                )
+                await updates.put(("result", result))
+            except Exception:  # noqa: BLE001 - avoid streaming internal details
+                logger.exception("Workspace query stream error")
+                await updates.put(("error", {"message": "Knowledge query failed."}))
+
+        task = asyncio.create_task(execute())
+        try:
+            while True:
+                event, payload = await updates.get()
+                yield _sse_event(event, payload)
+                if event in {"result", "error"}:
+                    break
+        except asyncio.CancelledError:
+            logger.info("Workspace query stream disconnected for workspace '%s'.", workspace_id)
+            raise
+        finally:
+            if not task.done():
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 

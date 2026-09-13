@@ -47,6 +47,7 @@ Do not place any secret in source control or a browser-exposed `VITE_` variable.
 | `GET /api/workspaces/{id}/claims`, `/entities`, `/timeline` | Read the enriched evidence record. |
 | `GET/POST /api/workspaces/{id}/rules` | Read or add workspace verification rules. |
 | `POST /api/workspaces/{id}/query` | Run an evidence-grounded workspace analysis. |
+| `POST /api/workspaces/{id}/query/stream` | Run the same analysis over SSE, emitting one current planner-status line followed by the final answer contract. |
 | `/datasets/*` | Lightweight server API for uploading, profiling, exploring, and deleting tabular datasets. |
 
 Legacy `/answer`, `/analyze`, `/api/assess`, and `/api/ask` endpoints remain

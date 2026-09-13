@@ -2,7 +2,7 @@
 import re
 import time
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 from app.planner.registry import AgentRegistry
 from app.knowledge.repository import KnowledgeRepository
 from app.knowledge.hybrid_retriever import HybridKnowledgeRetriever
@@ -37,16 +37,29 @@ class AnalysisPlanner:
         else:
             return "FACTUAL_QUERY"
 
-    async def execute_plan(self, workspace_id: str, query: str) -> Dict[str, Any]:
+    async def execute_plan(
+        self,
+        workspace_id: str,
+        query: str,
+        on_progress: Optional[Callable[[str], Awaitable[None]]] = None,
+    ) -> Dict[str, Any]:
+        """Run an analysis plan and optionally report its completed live stages."""
+        async def report(message: str) -> None:
+            if on_progress is not None:
+                await on_progress(message)
+
         start_time = time.perf_counter()
         intent = self.classify_intent(query)
         logger.info("Executing plan for workspace '%s', intent: %s, query: '%s'", workspace_id, intent, query)
+        await report("Classified the question and selected the relevant verification path.")
 
         plan_trace: List[str] = []
 
         # 1. Base Retrieval
+        await report("Searching the workspace for relevant source passages.")
         retrieved_chunks = self.retriever.retrieve(workspace_id, query, k=6)
         plan_trace.append(f"Retrieved {len(retrieved_chunks)} relevant source passages via hybrid search")
+        await report(f"Retrieved {len(retrieved_chunks)} relevant source passage(s).")
 
         ent_context = " ".join([c["text"] for c in retrieved_chunks])
         semantic_rules = self.repo.get_semantic_rules(workspace_id)
@@ -58,6 +71,7 @@ class AnalysisPlanner:
         # operate on retrieved documents directly; they do not need every
         # extraction and verification specialist to run first.
         if intent in {"WHY_ANALYSIS", "FACTUAL_QUERY", "DISCOVERY_QUERY", "COMPARISON_QUERY"}:
+            await report("Extracting contextual entities from the retrieved passages.")
             entity_agent = self.registry.get("entity_agent")
             ent_res = await entity_agent.analyze(
                 workspace_id, {"text": ent_context, "semantic_rules": semantic_rules}
@@ -67,18 +81,22 @@ class AnalysisPlanner:
                 plan_trace.append(
                     f"Identified {len(entities)} contextual entities ({', '.join([e['name'] for e in entities[:3]])})"
                 )
+            await report(f"Finished contextual entity review: {len(entities)} found.")
 
         if intent != "COMPARISON_QUERY":
+            await report("Extracting atomic assertions for evidence review.")
             claim_detective = self.registry.get("claim_detective")
             claim_res = await claim_detective.analyze(workspace_id, {"text": ent_context})
             claims = claim_res.get("claims", [])
             plan_trace.append(f"Extracted {len(claims)} atomic assertions")
 
+            await report(f"Checking {len(claims)} atomic assertion(s) against retrieved evidence.")
             evidence_agent = self.registry.get("evidence_agent")
             ev_res = await evidence_agent.analyze(
                 workspace_id, {"claims": claims, "candidate_chunks": retrieved_chunks}
             )
             verified_claims = ev_res.get("verified_claims", [])
+            await report(f"Completed evidence review for {len(verified_claims)} claim(s).")
 
         # 3. Intent-specific specialist dispatch
         contradictions = []
@@ -88,20 +106,25 @@ class AnalysisPlanner:
         patterns = []
 
         if intent in {"WHY_ANALYSIS", "CONTRADICTION_QUERY"}:
+            await report("Checking the reviewed claims for cross-document conflicts.")
             contra_agent = self.registry.get("contradiction_agent")
             contra_res = await contra_agent.analyze(workspace_id, {"claims": verified_claims})
             contradictions = contra_res.get("contradictions", [])
             if contradictions:
                 plan_trace.append(f"Investigated {len(contradictions)} cross-document discrepancies")
+            await report(f"Completed conflict review with {len(contradictions)} potential conflict(s).")
 
         if intent == "WHY_ANALYSIS":
+            await report("Constructing a timeline from the retrieved passages.")
             timeline_agent = self.registry.get("timeline_agent")
             time_res = await timeline_agent.analyze(workspace_id, {"text": ent_context})
             events = time_res.get("events", [])
             if events:
                 plan_trace.append(f"Constructed chronological timeline ({len(events)} temporal anchors)")
+            await report(f"Completed timeline review with {len(events)} temporal anchor(s).")
 
         if intent in {"GAP_QUERY", "WHY_ANALYSIS"}:
+            await report("Auditing the available evidence for gaps and unresolved claims.")
             gap_agent = self.registry.get("gap_agent")
             gap_res = await gap_agent.analyze(workspace_id, {
                 "claims": verified_claims,
@@ -111,8 +134,10 @@ class AnalysisPlanner:
             knowledge_gaps = gap_res.get("knowledge_gaps", [])
             if knowledge_gaps:
                 plan_trace.append(f"Audited workspace blind spots ({len(knowledge_gaps)} knowledge gaps)")
+            await report(f"Completed gap review with {len(knowledge_gaps)} unresolved area(s).")
 
         if intent == "COMPARISON_QUERY" and len(retrieved_chunks) >= 2:
+            await report("Comparing the most relevant source passages.")
             comparison_agent = self.registry.get("comparison_agent")
             first, second = retrieved_chunks[:2]
             comparison_res = await comparison_agent.analyze(workspace_id, {
@@ -123,18 +148,22 @@ class AnalysisPlanner:
             })
             comparisons = comparison_res.get("differences", [])
             plan_trace.append(f"Compared {len(comparisons)} substantive source differences")
+            await report(f"Completed comparison with {len(comparisons)} substantive difference(s).")
 
         if intent == "DISCOVERY_QUERY":
+            await report("Scanning the retrieved sources for cross-document patterns.")
             pattern_agent = self.registry.get("pattern_hunter")
             pattern_res = await pattern_agent.analyze(
                 workspace_id, {"chunks": retrieved_chunks, "claims": claims}
             )
             patterns = pattern_res.get("patterns", [])
             plan_trace.append(f"Scanned {len(patterns)} cross-document patterns")
+            await report(f"Completed pattern scan with {len(patterns)} signal(s).")
 
         # 5. Synthesis following Phase 11 Answer Contract
         synthesis_agent = self.registry.get("synthesis_agent")
         plan_trace.append("Synthesizing evidence-grounded response with uncertainty preservation")
+        await report("Synthesizing the answer while preserving evidence and uncertainty.")
 
         synthesis_res = await synthesis_agent.analyze(workspace_id, {
             "query": query,
@@ -150,6 +179,7 @@ class AnalysisPlanner:
         })
 
         total_ms = round((time.perf_counter() - start_time) * 1000, 1)
+        await report("Packaging the answer contract and linked evidence for review.")
 
         related_knowledge = dict(synthesis_res["related_knowledge"])
         if comparisons:
