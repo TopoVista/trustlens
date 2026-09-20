@@ -3,6 +3,7 @@ import io
 import csv
 import math
 import statistics
+from collections import Counter
 from typing import Any, Dict, List, Optional
 from app.specialists.base import BaseSpecialist
 
@@ -159,5 +160,81 @@ class DataAnalyst(BaseSpecialist):
                 "complete_rows": sum(1 for r in data_rows if all(c.strip() != "" for c in r)),
                 "total_rows": row_count,
                 "has_outliers": any(c.get("outliers_count", 0) > 0 for c in columns_profile.values())
-            }
+            },
+            # These are concise factual statements derived solely from the
+            # uploaded cells and calculations. Ingestion stores them both as
+            # atomic claims and semantic chunks, making tables usable by RAG
+            # without asking a model to guess what a CSV means.
+            "semantic_claims": self._semantic_claims(
+                filename, headers, data_rows, columns_profile, correlations,
+            ),
         }
+
+    @staticmethod
+    def _display(value: Any) -> str:
+        """Use compact, source-faithful values in a human-readable sentence."""
+        if isinstance(value, float):
+            return f"{value:.3f}".rstrip("0").rstrip(".")
+        return str(value)
+
+    def _semantic_claims(
+        self,
+        filename: str,
+        headers: List[str],
+        data_rows: List[List[str]],
+        columns_profile: Dict[str, Any],
+        correlations: List[Dict[str, Any]],
+    ) -> List[Dict[str, str]]:
+        """Create capped, attributable natural-language facts for tabular RAG.
+
+        The cap is deliberate: the graph needs useful representative claims,
+        not one node per cell. Every generated sentence points back to an exact
+        row range or a deterministic aggregate calculation.
+        """
+        claims: List[Dict[str, str]] = [{
+            "statement": f"{filename} contains {len(data_rows)} data rows across {len(headers)} columns.",
+            "location": "Dataset summary",
+            "claim_type": "METRIC",
+        }]
+        for header in headers[:16]:
+            profile = columns_profile.get(header, {})
+            stats = profile.get("stats", {})
+            if profile.get("type") == "Numeric" and {"min", "max", "mean"}.issubset(stats):
+                claims.append({
+                    "statement": f"In {filename}, {header} ranges from {self._display(stats['min'])} to {self._display(stats['max'])}, with an average of {self._display(stats['mean'])} across {profile.get('total_count', len(data_rows)) - profile.get('null_count', 0)} recorded values.",
+                    "location": f"Calculated summary for column {header}",
+                    "claim_type": "METRIC",
+                })
+            elif profile.get("null_count", 0):
+                claims.append({
+                    "statement": f"In {filename}, {header} is missing in {profile['null_count']} of {profile.get('total_count', len(data_rows))} rows.",
+                    "location": f"Data-quality summary for column {header}",
+                    "claim_type": "METRIC",
+                })
+            elif profile.get("distinct_count", 0) and profile.get("distinct_count", 0) <= 12:
+                column_index = headers.index(header)
+                values = [row[column_index].strip() for row in data_rows if column_index < len(row) and row[column_index].strip()]
+                if values:
+                    value, count = Counter(values).most_common(1)[0]
+                    claims.append({
+                        "statement": f"In {filename}, {header} is {value} in {count} of {len(data_rows)} rows.",
+                        "location": f"Categorical summary for column {header}",
+                        "claim_type": "METRIC",
+                    })
+
+        for correlation in correlations[:4]:
+            claims.append({
+                "statement": f"In {filename}, {correlation['column_a']} and {correlation['column_b']} have a Pearson correlation of {self._display(correlation['coefficient'])} across {correlation['sample_size']} paired rows; this describes association, not causation.",
+                "location": f"Calculated correlation: {correlation['column_a']} and {correlation['column_b']}",
+                "claim_type": "METRIC",
+            })
+
+        # Preserve representative records as complete sentences. Limit to 12
+        # to retain record-level recall while preventing a graph explosion.
+        for row_number, row in enumerate(data_rows[:12], start=2):
+            facts = [f"{header} is {row[index].strip()}" for index, header in enumerate(headers[:6])
+                     if index < len(row) and row[index].strip()]
+            if len(facts) >= 2:
+                statement = f"In {filename}, row {row_number} records that " + ", ".join(facts[:-1]) + f", and {facts[-1]}."
+                claims.append({"statement": statement, "location": f"Row {row_number}", "claim_type": "FACTUAL"})
+        return claims[:32]

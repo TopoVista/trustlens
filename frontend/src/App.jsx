@@ -217,7 +217,10 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 
   const handleAskGraphNode = (node) => {
     if (!node?.label) return;
-    handleRunQuery(`Show the evidence and verification context for: ${node.label}`);
+    // Show streaming progress immediately; waiting for the final answer made
+    // the graph action appear unresponsive on longer verification runs.
+    navigateView('query');
+    handleRunQuery(`What does the workspace evidence establish about "${node.label}"? Cite supporting or contradictory passages and identify any uncertainty.`);
   };
 
   const handleFocusGraphClaim = (claim) => {

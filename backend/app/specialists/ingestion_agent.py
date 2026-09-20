@@ -114,6 +114,20 @@ class IngestionKnowledgeAgent(BaseSpecialist):
 
             # 3. Structural Chunking with location references
             chunks_data = self._chunk_document(workspace_id, doc_id, raw_content, is_tabular)
+            table_claims = dataset_profile.get("semantic_claims", []) if dataset_profile else []
+            if table_claims:
+                # Raw CSV batches preserve source fidelity, while these
+                # source-derived sentences make row facts and calculations
+                # semantically retrievable by the existing chunk RAG index.
+                for claim_index, table_claim in enumerate(table_claims):
+                    chunks_data.append({
+                        "id": f"chk_table_{doc_id[-8:]}_{claim_index}",
+                        "workspace_id": workspace_id,
+                        "document_id": doc_id,
+                        "chunk_index": len(chunks_data),
+                        "text": table_claim["statement"],
+                        "location_info": table_claim["location"],
+                    })
             self.repo.add_chunks(chunks_data)
 
             # 4. Extract Entities
@@ -123,7 +137,12 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                 self.repo.add_entity(workspace_id, ent["name"], ent["entity_type"], ent.get("aliases"))
 
             # 5. Extract Claims and link only evidence that actually matches.
-            claim_res = await self.claim_detective.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
+            # CSV syntax is not natural language. Its claims are created from
+            # deterministic table facts below rather than treating each comma
+            # separated row as a malformed sentence.
+            claim_res = {"claims": []} if is_tabular else await self.claim_detective.analyze(
+                workspace_id, {"text": raw_content, "document_id": doc_id}
+            )
             for c in claim_res.get("claims", []):
                 claim_id = self.repo.add_claim(
                     workspace_id=workspace_id,
@@ -143,6 +162,28 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                         location_ref=matching_chunk.get("location_info", "Section 1"),
                         strength=0.85,
                     )
+
+            for claim_index, table_claim in enumerate(table_claims):
+                semantic_chunk = chunks_data[-len(table_claims) + claim_index]
+                claim_id = self.repo.add_claim(
+                    workspace_id=workspace_id,
+                    statement=table_claim["statement"],
+                    document_id=doc_id,
+                    claim_type=table_claim.get("claim_type", "FACTUAL"),
+                    status="SUPPORTED",
+                    confidence=0.98,
+                )
+                self.repo.add_evidence(
+                    workspace_id=workspace_id,
+                    claim_id=claim_id,
+                    document_id=doc_id,
+                    chunk_id=semantic_chunk["id"],
+                    exact_passage=table_claim["statement"],
+                    location_ref=table_claim["location"],
+                    relationship_type="SUPPORTS",
+                    strength=0.98,
+                    explanation="Deterministically derived from the uploaded table; see the stated row or calculation.",
+                )
 
             # 6. Extract Timeline Events
             time_res = await self.timeline_agent.analyze(workspace_id, {"text": raw_content, "document_id": doc_id})
@@ -167,7 +208,7 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                 "title": title,
                 "authority_level": authority_level,
                 "chunks_count": len(chunks_data),
-                "claims_extracted": len(claim_res.get("claims", [])),
+                "claims_extracted": len(claim_res.get("claims", [])) + len(table_claims),
                 "entities_extracted": len(ent_res.get("entities", [])),
                 "events_extracted": len(time_res.get("events", [])),
                 "is_tabular": is_tabular,

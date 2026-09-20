@@ -1,4 +1,5 @@
 """Regression coverage for the evidence-backed intelligence graph projection."""
+import asyncio
 import sys
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from app.main import app
 from app.specialists.numeric_verifier import verify_numeric_claim
 from app.specialists.relationship_agent import RelationshipAgent
 from app.specialists.temporal_verifier import verify_temporal_claim
+from app.specialists.ingestion_agent import IngestionKnowledgeAgent
 
 
 def _repo(tmp_path):
@@ -127,3 +129,35 @@ def test_dataset_variables_and_computed_correlation_enter_graph(tmp_path):
     graph = GraphQueries(repo).graph(workspace["id"], mode="data", min_confidence=0)
     assert {node["type"] for node in graph["nodes"]} >= {"DATASET", "VARIABLE", "VALUE"}
     assert any(edge["relation"] == "CORRELATED_WITH" and edge["provenance"]["method"] == "STRUCTURED_DATA" for edge in graph["edges"])
+
+
+def test_csv_becomes_source_linked_sentences_and_rag_chunks(tmp_path):
+    repo = _repo(tmp_path)
+    workspace = repo.create_workspace("CSV", owner_user_id="csv_user")
+    result = asyncio.run(IngestionKnowledgeAgent(repo).ingest_content(
+        workspace["id"], "Revenue", "revenue.csv",
+        "Region,Spend,Revenue\nNorth,10,20\nSouth,20,40\nNorth,30,60",
+        "csv", "HIGH",
+    ))
+
+    statements = [claim["statement"] for claim in repo.get_claims(workspace["id"])]
+    chunks = repo.get_chunks(workspace["id"], result["document_id"])
+    assert result["claims_extracted"] > 3
+    assert any("Spend ranges from 10 to 30" in statement for statement in statements)
+    assert any("row 2 records that Region is North" in statement for statement in statements)
+    assert any(chunk["location_info"] == "Row 2" for chunk in chunks)
+    assert all(",10,20" not in statement for statement in statements)
+
+
+def test_path_prefers_stronger_evidence_route_over_shorter_weak_route(tmp_path):
+    repo = _repo(tmp_path)
+    workspace = repo.create_workspace("Paths", owner_user_id="path_user")
+    node_ids = [repo.upsert_graph_node(workspace["id"], "CLAIM", label, "test", label, {}) for label in "abcd"]
+    a, b, c, d = node_ids
+    repo.upsert_graph_edge(workspace["id"], a, d, "MENTIONS", 0.51, "HEURISTIC", None, None, "weak shortcut")
+    repo.upsert_graph_edge(workspace["id"], a, b, "SUPPORTED_BY", 0.95, "NLI", "doc", "chunk", "strong first link")
+    repo.upsert_graph_edge(workspace["id"], b, c, "DEPENDS_ON", 0.95, "NLI", "doc", "chunk", "strong middle link")
+    repo.upsert_graph_edge(workspace["id"], c, d, "SUPPORTED_BY", 0.95, "NLI", "doc", "chunk", "strong final link")
+    path = GraphQueries(repo).path(workspace["id"], a, d)
+    assert len(path["hops"]) == 3
+    assert path["path_confidence"] > 0.7

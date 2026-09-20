@@ -1,7 +1,8 @@
 """Safe workspace-scoped graph query helpers."""
 from __future__ import annotations
 
-from collections import deque
+import heapq
+import math
 from typing import Any, Dict, List, Optional, Set
 
 from app.knowledge.repository import KnowledgeRepository
@@ -83,25 +84,43 @@ class GraphQueries:
     def path(self, workspace_id: str, source: str, target: str, max_hops: int = 6) -> Optional[Dict[str, Any]]:
         if not self.repo.get_graph_node(workspace_id, source) or not self.repo.get_graph_node(workspace_id, target):
             return None
-        edges = [edge for edge in self.repo.get_graph_edges(workspace_id) if edge["confidence"] >= 0.5]
+        # A shortest route is often a poor explanation: a weak heuristic link
+        # should not beat a slightly longer chain of explicit evidence.
+        relation_weights = {
+            "SUPPORTED_BY": 1.0, "SUPPORTS": 1.0, "CONTRADICTS": 0.98,
+            "DEPENDS_ON": 0.9, "PRECEDES": 0.82, "MENTIONS": 0.78,
+            "HAS_VALUE": 0.76, "CORRELATED_WITH": 0.62,
+        }
+        edges = [edge for edge in self.repo.get_graph_edges(workspace_id)
+                 if edge["confidence"] >= 0.5 and edge["relation_type"] in relation_weights]
         adjacency: Dict[str, List[Dict[str, Any]]] = {}
         for edge in edges:
             adjacency.setdefault(edge["source_node_id"], []).append(edge)
             adjacency.setdefault(edge["target_node_id"], []).append(edge)
-        for options in adjacency.values():
-            options.sort(key=lambda edge: (edge["evidence_document_id"] is not None, edge["confidence"]), reverse=True)
-        queue = deque([(source, [], {source})])
+        # Dijkstra over -log(edge quality) finds the strongest cumulative
+        # explanation. The hop cap keeps the returned path understandable.
+        queue = [(0.0, 0, 0, source, [], {source})]
+        best_cost: Dict[tuple[str, int], float] = {(source, 0): 0.0}
         while queue:
-            current, hops, seen = queue.popleft()
+            cost, hops_count, _tie, current, hops, seen = heapq.heappop(queue)
             if current == target:
                 return {"source": source, "target": target, "hops": [self._public_edge(edge) for edge in hops],
-                        "explanation": f"Connection found through {len(hops)} evidence-backed relationship(s)."}
-            if len(hops) >= max_hops:
+                        "path_confidence": round(math.exp(-cost) if hops else 1.0, 3),
+                        "explanation": f"Best evidence route found through {len(hops)} relationship(s), ranked by source strength and relation reliability."}
+            if hops_count >= max_hops:
                 continue
             for edge in adjacency.get(current, []):
                 nxt = edge["target_node_id"] if edge["source_node_id"] == current else edge["source_node_id"]
-                if nxt not in seen:
-                    queue.append((nxt, hops + [edge], seen | {nxt}))
+                if nxt in seen:
+                    continue
+                quality = max(0.01, min(1.0, float(edge["confidence"]) * relation_weights[edge["relation_type"]]))
+                next_cost = cost - math.log(quality)
+                state = (nxt, hops_count + 1)
+                if next_cost >= best_cost.get(state, float("inf")):
+                    continue
+                best_cost[state] = next_cost
+                explicit_tie = 0 if edge.get("evidence_document_id") else 1
+                heapq.heappush(queue, (next_cost, hops_count + 1, explicit_tie, nxt, hops + [edge], seen | {nxt}))
         return {"source": source, "target": target, "hops": [], "explanation": "No evidence-backed path was found in this workspace."}
 
     @staticmethod
