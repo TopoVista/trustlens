@@ -1,6 +1,7 @@
 """Data access repository for TrustLens Knowledge and Evidence Graph"""
 import json
 import uuid
+import hashlib
 from typing import Any, Dict, List, Optional, Tuple
 from app.knowledge.db import get_db_connection
 
@@ -276,8 +277,19 @@ class KnowledgeRepository:
         relation_type: str,
         evidence_text: str = ""
     ) -> str:
-        rel_id = f"rel_{uuid.uuid4().hex[:10]}"
         with self._get_conn() as conn:
+            existing = conn.execute(
+                """
+                SELECT id FROM relationships
+                WHERE workspace_id = ? AND source_entity_id = ? AND target_entity_id = ?
+                  AND relation_type = ? AND evidence_text = ?
+                LIMIT 1
+                """,
+                (workspace_id, source_entity_id, target_entity_id, relation_type, evidence_text),
+            ).fetchone()
+            if existing:
+                return existing["id"]
+            rel_id = f"rel_{uuid.uuid4().hex[:10]}"
             conn.execute(
                 """
                 INSERT INTO relationships (id, workspace_id, source_entity_id, target_entity_id, relation_type, evidence_text)
@@ -319,6 +331,154 @@ class KnowledgeRepository:
                 "nodes": [{"id": e["id"], "name": e["name"], "type": e["entity_type"]} for e in entities],
                 "edges": [dict(r) for r in rel_rows]
             }
+
+    # --- Generic evidence intelligence graph projection ---
+
+    @staticmethod
+    def _graph_id(prefix: str, *parts: str) -> str:
+        """Return a stable, URL-safe identifier for idempotent graph updates."""
+        raw = "|".join(str(part or "") for part in parts)
+        return f"{prefix}_{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:20]}"
+
+    def upsert_graph_node(
+        self,
+        workspace_id: str,
+        node_type: str,
+        label: str,
+        reference_type: str,
+        reference_id: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Create or refresh a projection node without duplicating a domain record."""
+        node_id = self._graph_id("gn", workspace_id, reference_type, reference_id)
+        with self._get_conn() as conn:
+            existing = conn.execute(
+                "SELECT id FROM graph_nodes WHERE workspace_id = ? AND reference_type = ? AND reference_id = ?",
+                (workspace_id, reference_type, reference_id),
+            ).fetchone()
+            if existing:
+                node_id = existing["id"]
+                conn.execute(
+                    """
+                    UPDATE graph_nodes
+                    SET node_type = ?, label = ?, metadata_json = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE workspace_id = ? AND id = ?
+                    """,
+                    (node_type, label, json.dumps(metadata or {}), workspace_id, node_id),
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO graph_nodes (id, workspace_id, node_type, label, reference_type, reference_id, metadata_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (node_id, workspace_id, node_type, label, reference_type, reference_id, json.dumps(metadata or {})),
+                )
+        return node_id
+
+    def upsert_graph_edge(
+        self,
+        workspace_id: str,
+        source_node_id: str,
+        target_node_id: str,
+        relation_type: str,
+        confidence: float,
+        provenance_type: str,
+        evidence_document_id: Optional[str] = None,
+        evidence_chunk_id: Optional[str] = None,
+        explanation: str = "",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Create or refresh one explainable edge; evidence is part of its identity."""
+        edge_id = self._graph_id(
+            "ge", workspace_id, source_node_id, target_node_id, relation_type,
+            evidence_document_id or "", evidence_chunk_id or "",
+        )
+        confidence = round(max(0.0, min(1.0, float(confidence))), 4)
+        with self._get_conn() as conn:
+            existing = conn.execute(
+                "SELECT id FROM graph_edges WHERE workspace_id = ? AND id = ?",
+                (workspace_id, edge_id),
+            ).fetchone()
+            params = (
+                source_node_id, target_node_id, relation_type, confidence, provenance_type,
+                evidence_document_id, evidence_chunk_id, explanation, json.dumps(metadata or {}),
+                workspace_id, edge_id,
+            )
+            if existing:
+                conn.execute(
+                    """
+                    UPDATE graph_edges
+                    SET source_node_id = ?, target_node_id = ?, relation_type = ?, confidence = ?,
+                        provenance_type = ?, evidence_document_id = ?, evidence_chunk_id = ?,
+                        explanation = ?, metadata_json = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE workspace_id = ? AND id = ?
+                    """,
+                    params,
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO graph_edges (
+                        id, workspace_id, source_node_id, target_node_id, relation_type, confidence,
+                        provenance_type, evidence_document_id, evidence_chunk_id, explanation, metadata_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (edge_id, workspace_id, *params[:9]),
+                )
+        return edge_id
+
+    @staticmethod
+    def _decode_graph_node(row: Any) -> Dict[str, Any]:
+        item = dict(row)
+        item["metadata"] = json.loads(item.pop("metadata_json") or "{}")
+        return item
+
+    @staticmethod
+    def _decode_graph_edge(row: Any) -> Dict[str, Any]:
+        item = dict(row)
+        item["metadata"] = json.loads(item.pop("metadata_json") or "{}")
+        return item
+
+    def get_graph_nodes(self, workspace_id: str, limit: int = 2000) -> List[Dict[str, Any]]:
+        with self._get_conn() as conn:
+            rows = conn.execute(
+                "SELECT * FROM graph_nodes WHERE workspace_id = ? ORDER BY updated_at DESC LIMIT ?",
+                (workspace_id, max(1, min(int(limit), 5000))),
+            ).fetchall()
+        return [self._decode_graph_node(row) for row in rows]
+
+    def get_graph_edges(self, workspace_id: str, limit: int = 5000) -> List[Dict[str, Any]]:
+        with self._get_conn() as conn:
+            rows = conn.execute(
+                "SELECT * FROM graph_edges WHERE workspace_id = ? ORDER BY confidence DESC, updated_at DESC LIMIT ?",
+                (workspace_id, max(1, min(int(limit), 10000))),
+            ).fetchall()
+        return [self._decode_graph_edge(row) for row in rows]
+
+    def get_graph_node(self, workspace_id: str, node_id: str) -> Optional[Dict[str, Any]]:
+        with self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM graph_nodes WHERE workspace_id = ? AND id = ?",
+                (workspace_id, node_id),
+            ).fetchone()
+        return self._decode_graph_node(row) if row else None
+
+    def get_graph_edge(self, workspace_id: str, edge_id: str) -> Optional[Dict[str, Any]]:
+        with self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM graph_edges WHERE workspace_id = ? AND id = ?",
+                (workspace_id, edge_id),
+            ).fetchone()
+        return self._decode_graph_edge(row) if row else None
+
+    def get_graph_stats(self, workspace_id: str) -> Dict[str, int]:
+        with self._get_conn() as conn:
+            node_count = conn.execute("SELECT COUNT(*) FROM graph_nodes WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
+            edge_count = conn.execute("SELECT COUNT(*) FROM graph_edges WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
+            claim_count = conn.execute("SELECT COUNT(*) FROM graph_nodes WHERE workspace_id = ? AND node_type = 'CLAIM'", (workspace_id,)).fetchone()[0]
+            contradiction_count = conn.execute("SELECT COUNT(*) FROM graph_edges WHERE workspace_id = ? AND relation_type = 'CONTRADICTS'", (workspace_id,)).fetchone()[0]
+        return {"nodes": node_count, "edges": edge_count, "claims": claim_count, "contradictions": contradiction_count}
 
     # --- 4. Claim & Evidence Graph ---
 
@@ -527,6 +687,8 @@ class KnowledgeRepository:
             entity_count = conn.execute("SELECT COUNT(*) FROM entities WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
             event_count = conn.execute("SELECT COUNT(*) FROM events WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
             evidence_count = conn.execute("SELECT COUNT(*) FROM evidence WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
+            graph_node_count = conn.execute("SELECT COUNT(*) FROM graph_nodes WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
+            graph_edge_count = conn.execute("SELECT COUNT(*) FROM graph_edges WHERE workspace_id = ?", (workspace_id,)).fetchone()[0]
 
             # Claims status breakdown
             supported = conn.execute("SELECT COUNT(*) FROM claims WHERE workspace_id = ? AND status = 'SUPPORTED'", (workspace_id,)).fetchone()[0]
@@ -548,6 +710,8 @@ class KnowledgeRepository:
                 "entities": entity_count,
                 "events": event_count,
                 "evidence_links": evidence_count,
+                "graph_nodes": graph_node_count,
+                "graph_edges": graph_edge_count,
                 "breakdown": {
                     "supported": supported,
                     "supported_pct": supported_pct,

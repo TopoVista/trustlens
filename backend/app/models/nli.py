@@ -197,3 +197,23 @@ def verify_claim_batch(pairs: List[Tuple[str, str]]) -> List[Tuple[str, float]]:
         logger.warning("OpenAI NLI unavailable (%s); using deterministic fallback.", e)
 
     return [_fallback_verify(claim, evidence) for (claim, evidence) in pairs]
+
+
+def verify_claim_batch_detailed(pairs: List[Tuple[str, str]]) -> List[dict]:
+    """Return NLI verdicts together with explicit provider/fallback provenance."""
+    if not pairs:
+        return []
+    try:
+        provider_results = _verify_batch_openai(pairs)
+        if provider_results is not None and len(provider_results) == len(pairs):
+            model = os.getenv("OPENAI_NLI_MODEL", _DEFAULT_OPENAI_NLI_MODEL).strip() or _DEFAULT_OPENAI_NLI_MODEL
+            return [
+                {"label": label, "confidence": confidence, "method": "NLI", "provider": "openai", "model": model, "fallback": False}
+                for label, confidence in provider_results
+            ]
+    except Exception as exc:  # noqa: BLE001 - provenance must preserve fallback behavior
+        logger.warning("OpenAI NLI unavailable (%s); using deterministic fallback.", exc)
+    return [
+        {"label": label, "confidence": confidence, "method": "NLI", "provider": "deterministic", "model": "lexical-v1", "fallback": True}
+        for label, confidence in (_fallback_verify(claim, evidence) for claim, evidence in pairs)
+    ]

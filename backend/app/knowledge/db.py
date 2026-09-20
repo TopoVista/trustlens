@@ -316,6 +316,46 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
     );
     """)
 
+    # 12. Generic intelligence-graph projection. Canonical document, claim,
+    # evidence, entity and event tables remain the source of truth; these
+    # tables only make their evidence-backed relationships queryable as a
+    # normalized graph without requiring a separate graph database.
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS graph_nodes (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL,
+        node_type TEXT NOT NULL,
+        label TEXT NOT NULL,
+        reference_type TEXT NOT NULL,
+        reference_id TEXT NOT NULL,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+        UNIQUE(workspace_id, reference_type, reference_id)
+    );
+    """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS graph_edges (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL,
+        source_node_id TEXT NOT NULL,
+        target_node_id TEXT NOT NULL,
+        relation_type TEXT NOT NULL,
+        confidence REAL NOT NULL DEFAULT 0.0,
+        provenance_type TEXT NOT NULL DEFAULT 'HEURISTIC',
+        evidence_document_id TEXT,
+        evidence_chunk_id TEXT,
+        explanation TEXT NOT NULL DEFAULT '',
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_node_id) REFERENCES graph_nodes(id) ON DELETE CASCADE,
+        FOREIGN KEY (target_node_id) REFERENCES graph_nodes(id) ON DELETE CASCADE
+    );
+    """)
+
     # Indexes for lightning fast workspace-scoped lookups
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_workspace ON documents(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_docs_workspace_hash ON documents(workspace_id, content_hash);")
@@ -326,6 +366,11 @@ def ensure_schema(db_path: Optional[str] = None) -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_events_workspace ON events(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_rules_workspace ON semantic_rules(workspace_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_workspace ON chunk_embeddings(workspace_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_graph_nodes_workspace_type ON graph_nodes(workspace_id, node_type);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_graph_nodes_reference ON graph_nodes(workspace_id, reference_type, reference_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_graph_edges_workspace ON graph_edges(workspace_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON graph_edges(workspace_id, source_node_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON graph_edges(workspace_id, target_node_id);")
 
     conn.commit()
     conn.close()

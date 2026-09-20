@@ -12,17 +12,9 @@ from app.specialists.contradiction_agent import ContradictionAgent
 from app.specialists.entity_agent import EntityAgent
 from app.specialists.timeline_agent import TimelineAgent
 from app.specialists.gap_agent import KnowledgeGapAgent
-from app.specialists.data_analyst import DataAnalyst
 from app.specialists.pattern_hunter import PatternHunter
 from app.specialists.comparison_agent import DocumentComparisonAgent
 from app.specialists.synthesis_agent import SynthesisAgent
-from app.agents.specialists import (
-    AnomalyAnalyst,
-    DataProfiler,
-    EDAAnalyst,
-    InsightAnalyst,
-    VisualizationAnalyst,
-)
 
 
 class AgentRegistry:
@@ -39,12 +31,6 @@ class AgentRegistry:
             "entity_agent": EntityAgent,
             "timeline_agent": TimelineAgent,
             "gap_agent": KnowledgeGapAgent,
-            "data_analyst": DataAnalyst,
-            "data_profiler": DataProfiler,
-            "eda_analyst": EDAAnalyst,
-            "insight_analyst": InsightAnalyst,
-            "visualization_analyst": VisualizationAnalyst,
-            "anomaly_analyst": AnomalyAnalyst,
             "pattern_hunter": PatternHunter,
             "comparison_agent": DocumentComparisonAgent,
             "synthesis_agent": SynthesisAgent,

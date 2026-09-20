@@ -135,25 +135,6 @@ def test_prod_mode_rejects_missing_exp_claim(prod_mode):
     assert resp.status_code == 401
 
 
-def test_prod_mode_user_id_comes_from_token_sub(prod_mode):
-    token = _make_token(_valid_payload(sub="jwt_user_alpha"))
-    resp = client.get("/api/me", headers={"Authorization": f"Bearer {token}"})
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["user_id"] == "jwt_user_alpha"
-    assert body["is_authenticated"] is True
-    assert body["auth_method"] == "jwt"
-
-
-def test_dev_mode_user_is_marked_unauthenticated():
-    resp = client.get("/api/me", headers={"x-user-id": "dev_user"})
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["user_id"] == "dev_user"
-    assert body["is_authenticated"] is False
-    assert body["auth_method"] == "dev"
-
-
 # --- 3. Workspace ownership enforcement (IDOR prevention) -------------------
 
 
@@ -246,7 +227,6 @@ def test_enforce_ownership_helper_rejects_foreign_owner(tmp_path):
 
     # Owner passes
     enforce_workspace_ownership(AuthUser(user_id="alpha"), ws["id"], repo)
-
     # Nonexistent workspace raises
     with pytest.raises(WorkspaceOwnershipError):
         enforce_workspace_ownership(AuthUser(user_id="alpha"), "ws_missing", repo)

@@ -15,8 +15,9 @@ answer is not proof; the evidence behind it must remain reviewable.
   atomic claims, retrieved evidence, contradictions, and unresolved items.
 - A POST-based Server-Sent Events query stream that displays one current,
   backend-reported verification stage while an answer is being prepared.
-- Evidence health metrics, proactive discovery signals, an entity map, a
-  chronological timeline, and workspace-specific verification policies.
+- Evidence health metrics, proactive discovery signals, a provenance-bearing
+  intelligence graph, a chronological timeline, and workspace-specific
+  verification policies.
 - A React/Vite frontend with an original TrustLens verification visual and an
   evidence-centered review interface.
 - Local SQLite storage for development and durable Postgres storage when
@@ -106,10 +107,11 @@ valid value such as `94.1` from being displayed as `9410%`.
 ## Documentation
 
 - [Project architecture](docs/architecture.md)
+- [Intelligence graph contract and verification design](docs/INTELLIGENCE_GRAPH.md)
+- [Architecture, workflow, RAG, and specialist guide](docs/ARCHITECTURE_WORKFLOW_RAG_AND_AGENTS_GUIDE.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)
 - [Render deployment review](docs/RENDER_FREE_AUDIT.md)
 - [Render persistence setup](docs/RENDER_PERSISTENCE_SETUP.md)
-- [Dataset analytics API](docs/DATASET_ANALYTICS.md)
 - [Demo walkthrough](docs/demo.md)
 - [Evaluation plan](docs/evaluation.md)
 - [Error and limitation register](docs/errors.md)

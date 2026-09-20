@@ -59,6 +59,33 @@ For a question, the planner selects applicable specialist capabilities from the 
 
 The optional provider layer in `backend/app/llm` and `backend/app/models` creates OpenAI clients lazily. The production dependency set deliberately excludes local Torch, Transformers, spaCy, sentence-transformers, and FAISS runtime paths. Fallback behavior must be described as degraded operation, not as equivalent provider-backed verification.
 
+## Intelligence graph projection
+
+Canonical `documents`, `chunks`, `claims`, `evidence`, `entities`,
+`relationships`, `events`, and dataset-profile records remain the source of
+truth. `graph_nodes` and `graph_edges` are an additive, workspace-scoped
+projection built after ingestion (and lazily for pre-existing workspaces).
+Every graph edge includes confidence, method/provenance, source document or
+chunk when available, and a human-readable explanation.
+
+The browser requests `GET /api/workspaces/{id}/graph` once per workspace
+refresh, then performs ordinary type, relation, confidence, and status filters
+client-side. Sigma renders the filtered projection; Graphology owns the local
+graph representation and interaction state. Node, neighbor, and path endpoints
+repeat ownership validation server-side, so a graph node ID cannot cross a
+workspace boundary.
+
+Relationship extraction is conservative. Explicit source language can form
+`DEPENDS_ON`, `AFFECTS`, `CONTRIBUTES_TO`, or `CAUSES`; simple co-occurrence is
+only a low-confidence `ASSOCIATED_WITH` edge. Dataset correlations are stored
+as `CORRELATED_WITH` with coefficient/sample metadata and are explicitly not
+causal claims.
+
+Workspace verification adds deterministic numeric and temporal checks beside
+NLI. Both return provenance and remain distinguishable from provider-backed
+NLI; the resulting trust-support score is an evidence support signal, not a
+probability that a statement is objectively true.
+
 ## Deployment boundaries
 
 The Render Docker service and Postgres Blueprint resource are described in `render.yaml`. Vercel deploys the independent Vite app from `frontend` and requires `VITE_API_URL` at build time. Browser success depends on all of these being aligned:

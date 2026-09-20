@@ -1,7 +1,7 @@
 # TrustLens backend
 
 The backend is a FastAPI application for workspace-scoped document ingestion,
-evidence-oriented analysis, and lightweight dataset analytics. It is designed
+evidence-oriented analysis. It is designed
 to run as one Dockerized Uvicorn process on Render without local ML model
 servers or background workers.
 
@@ -39,7 +39,7 @@ Do not place any secret in source control or a browser-exposed `VITE_` variable.
 | Route | Purpose |
 |---|---|
 | `GET /health`, `GET /health/ready`, `GET /health/memory` | Service probes and lightweight diagnostics. |
-| `GET /api/me`, `GET /api/me/storage` | Caller identity metadata and storage status. |
+| `GET /api/me/storage` | Active user storage status. |
 | `GET/POST /api/workspaces` | List or create owner-scoped workspaces. |
 | `GET /api/workspaces/{id}/health` | Workspace document, claim, graph, and gap summary. |
 | `POST/GET /api/workspaces/{id}/documents` | Ingest or list workspace documents. Ingestion returns document ID and authority. |
@@ -48,10 +48,11 @@ Do not place any secret in source control or a browser-exposed `VITE_` variable.
 | `GET/POST /api/workspaces/{id}/rules` | Read or add workspace verification rules. |
 | `POST /api/workspaces/{id}/query` | Run an evidence-grounded workspace analysis. |
 | `POST /api/workspaces/{id}/query/stream` | Run the same analysis over SSE, emitting one current planner-status line followed by the final answer contract. |
-| `/datasets/*` | Lightweight server API for uploading, profiling, exploring, and deleting tabular datasets. |
+| `GET /api/workspaces/{id}/graph`, `/graph/nodes/{node_id}`, `/graph/path` | Read the workspace evidence graph, a node's provenance, or an evidence path. |
 
-Legacy `/answer`, `/analyze`, `/api/assess`, and `/api/ask` endpoints remain
-for compatibility. The active React product uses the workspace routes.
+The backend exposes the workspace product surface consumed by the React
+application. CSV and TSV content is profiled as part of document ingestion;
+there is no separate dataset or vendor-assessment API.
 
 ## Storage behavior
 
@@ -69,5 +70,5 @@ From repository root:
 pytest tests -q
 ```
 
-The suite covers authentication and ownership, persistence selection, routes,
-agents and planner dispatch, pipeline behavior, CORS, analytics, and security.
+The suite covers authentication and ownership, persistence selection, workspace
+routes, ingestion, planner dispatch, graph behavior, CORS, and security.

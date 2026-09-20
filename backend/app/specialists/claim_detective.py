@@ -2,7 +2,7 @@
 import re
 from typing import Any, Dict, List
 from app.specialists.base import BaseSpecialist
-from app.pipeline.claims import split_into_claims, normalize_claim
+from app.pipeline.claims import split_atomic_claims, normalize_claim
 
 
 class ClaimDetective(BaseSpecialist):
@@ -26,7 +26,7 @@ class ClaimDetective(BaseSpecialist):
             return {"claims": []}
 
         # Use conservative claim splitting
-        raw_statements = split_into_claims(text)
+        raw_statements = split_atomic_claims(text)
         claims = []
         seen = set()
 

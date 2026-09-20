@@ -82,6 +82,24 @@ def split_into_claims(text: str) -> List[str]:
     return claims
 
 
+def split_atomic_claims(text: str) -> List[str]:
+    """Conservatively split compound, independently measurable statements.
+
+    General-purpose conjunction splitting is unsafe because it can discard a
+    qualifier or sever a causal condition. We only split ``and`` when both
+    clauses carry their own numeric/currency/percentage signal.
+    """
+    atomic: List[str] = []
+    numeric_signal = re.compile(r"(?:[$€£]\s*\d|\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?\b)")
+    for claim in split_into_claims(text):
+        parts = re.split(r"\s+and\s+", claim, maxsplit=1, flags=re.IGNORECASE)
+        if len(parts) == 2 and all(numeric_signal.search(part) for part in parts):
+            atomic.extend(part.strip().rstrip(";,") + ("." if claim.endswith(".") else "") for part in parts)
+        else:
+            atomic.append(claim)
+    return atomic
+
+
 def normalize_claim(claim: str) -> str:
     """
     Conservatively normalize claim for retrieval and NLI matching.

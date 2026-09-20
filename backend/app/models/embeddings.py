@@ -1,18 +1,10 @@
-"""Embeddings and vector persistence utilities (OpenAI API backed, no torch/faiss).
-
-Interfaces preserved for backward compatibility:
-
-- ``get_embedding_model()`` -> object exposing ``encode(texts, ...)`` and
-  ``get_model_name()`` so existing callers (``app.pipeline.retriever``,
-  ``app.knowledge.hybrid_retriever``) require no changes.
-- ``build_index()`` builds and persists corpus embeddings on disk
-  (``corpus_embeddings.npy``) instead of a FAISS index.
+"""Workspace embedding utilities (OpenAI API backed, no torch/faiss).
 
 Embedding strategy:
   * Query/document embeddings are generated with the OpenAI Embeddings API
     (``OPENAI_EMBEDDING_MODEL``, default ``text-embedding-3-small``).
-  * Document embeddings are generated once and persisted (numpy file / SQLite
-    blob tables), never regenerated per request.
+  * Workspace document embeddings are generated once and persisted in the
+    repository, never regenerated per request.
   * Query embeddings are computed once per query and memoized in a bounded
     in-memory cache.
   * If the OpenAI API is unavailable (no key, network error, quota), a
@@ -20,26 +12,17 @@ Embedding strategy:
     application never crashes.
 """
 import hashlib
-import json
 import logging
 import os
 import re
 import threading
 from collections import OrderedDict
-from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
 from openai import OpenAI
 
 logger = logging.getLogger("trustlens.embeddings")
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
-DOCS_PATH = DATA_DIR / "processed_docs" / "docs.json"
-INDEX_PATH = DATA_DIR / "index.faiss"  # legacy FAISS artifact, no longer needed at runtime
-STORE_PATH = DATA_DIR / "doc_store.json"
-CORPUS_EMBEDDINGS_PATH = DATA_DIR / "corpus_embeddings.npy"
 
 DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -182,43 +165,3 @@ def get_embedding_model() -> EmbeddingService:
                 _singleton = EmbeddingService(model or DEFAULT_OPENAI_EMBEDDING_MODEL)
     return _singleton
 
-
-def build_index():
-    """Build and persist corpus embeddings from processed documents.
-
-    Replaces the previous FAISS index builder. Writes ``corpus_embeddings.npy``
-    and ``doc_store.json`` so retrieval never needs to re-embed the corpus.
-    """
-    if not DOCS_PATH.exists():
-        raise FileNotFoundError(
-            f"Processed documents not found at {DOCS_PATH}. Run corpus build script first."
-        )
-
-    with open(DOCS_PATH, "r", encoding="utf-8") as f:
-        documents = json.load(f)
-
-    texts = [doc["text"] for doc in documents]
-    model = get_embedding_model()
-
-    logger.info("Encoding %d documents with model '%s'...", len(texts), model.get_model_name())
-    embeddings = model.encode(
-        texts,
-        batch_size=32,
-        show_progress_bar=False,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-    ).astype(np.float32)
-
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(CORPUS_EMBEDDINGS_PATH, embeddings)
-
-    with open(STORE_PATH, "w", encoding="utf-8") as f:
-        json.dump(documents, f, indent=2, ensure_ascii=False)
-
-    logger.info(
-        "Built persisted corpus embeddings at %s with %d documents (dim=%d)",
-        CORPUS_EMBEDDINGS_PATH,
-        len(documents),
-        embeddings.shape[1],
-    )
-    return len(documents)

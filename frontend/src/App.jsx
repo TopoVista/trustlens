@@ -10,15 +10,17 @@ import SpecialistCanvas from './components/SpecialistCanvas.jsx';
 import AnswerContractPanel from './components/AnswerContractPanel.jsx';
 import HealthAuditDashboard from './components/HealthAuditDashboard.jsx';
 import KnowledgeGraphTimeline from './components/KnowledgeGraphTimeline.jsx';
+import KnowledgeMap from './components/KnowledgeMap.jsx';
 import DocumentLibrary from './components/DocumentLibrary.jsx';
 import SemanticRulesManager from './components/SemanticRulesManager.jsx';
 import IngestionModal from './components/IngestionModal.jsx';
 import ArchitectureModal from './components/ArchitectureModal.jsx';
 import Footer from './components/Footer.jsx';
+import GuideChat from './components/guide/GuideChat.jsx';
 import {
   addWorkspaceRule, checkHealth, createWorkspace, getUserStorageInfo,
   getWorkspaceDiscoveries, getWorkspaceDocuments, getWorkspaceEntities,
-  getWorkspaceHealth, getWorkspaceRules, getWorkspaceTimeline, listWorkspaces,
+  getWorkspaceGraph, getWorkspaceHealth, getWorkspaceRules, getWorkspaceTimeline, listWorkspaces,
   queryKnowledgeStream, setAuthContext, uploadDocument
 } from './api.js';
 
@@ -52,6 +54,10 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
   const [discoveries, setDiscoveries] = useState([]);
   const [entitiesData, setEntitiesData] = useState(null);
   const [timelineData, setTimelineData] = useState([]);
+  const [graphData, setGraphData] = useState({ nodes: [], edges: [], stats: {} });
+  const [graphLoading, setGraphLoading] = useState(false);
+  const [graphError, setGraphError] = useState(false);
+  const [graphFocusNodeId, setGraphFocusNodeId] = useState(null);
   const [rules, setRules] = useState([]);
   const [workspaceDocuments, setWorkspaceDocuments] = useState([]);
   const [activeView, setActiveView] = useState(viewFromLocation);
@@ -117,13 +123,15 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
 
   const refreshWorkspaceData = async (workspaceId) => {
     try {
-      const [health, discoveryResult, entities, timeline, workspaceRules, documents] = await Promise.all([
+      setGraphLoading(true);
+      const [health, discoveryResult, entities, timeline, workspaceRules, documents, graph] = await Promise.all([
         getWorkspaceHealth(workspaceId).catch(() => null),
         getWorkspaceDiscoveries(workspaceId).catch(() => ({ discoveries: [] })),
         getWorkspaceEntities(workspaceId).catch(() => null),
         getWorkspaceTimeline(workspaceId).catch(() => []),
         getWorkspaceRules(workspaceId).catch(() => []),
-        getWorkspaceDocuments(workspaceId).catch(() => [])
+        getWorkspaceDocuments(workspaceId).catch(() => []),
+        getWorkspaceGraph(workspaceId).catch(() => null)
       ]);
       setHealthData(health);
       setDiscoveries(discoveryResult?.discoveries || []);
@@ -131,9 +139,14 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
       setTimelineData(timeline || []);
       setRules(workspaceRules || []);
       setWorkspaceDocuments(documents || []);
+      setGraphData(graph || { nodes: [], edges: [], stats: {} });
+      setGraphError(!graph);
       refreshStorageStats();
     } catch (err) {
       console.error('Error refreshing workspace data:', err);
+      setGraphError(true);
+    } finally {
+      setGraphLoading(false);
     }
   };
 
@@ -202,6 +215,29 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
     }
   };
 
+  const handleAskGraphNode = (node) => {
+    if (!node?.label) return;
+    handleRunQuery(`Show the evidence and verification context for: ${node.label}`);
+  };
+
+  const handleFocusGraphClaim = (claim) => {
+    const label = claim?.claim_text || claim?.statement || claim?.claim;
+    const normalized = (label || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const match = graphData.nodes.find((node) => node.type === 'CLAIM' && ((node.label || '').toLowerCase() === (label || '').toLowerCase() || (node.label || '').toLowerCase().includes(normalized)));
+    if (match) {
+      setGraphFocusNodeId(match.id);
+      navigateView('graph');
+    }
+  };
+
+  const handleGuideAction = (action) => {
+    if (action === 'openIngest') setIsIngestOpen(true);
+    if (action === 'navigateQuery') navigateView('query');
+    if (action === 'navigateDocuments') navigateView('documents');
+    if (action === 'navigateGraph') navigateView('graph');
+    if (action === 'navigateHealth') navigateView('health');
+  };
+
   return (
     <div className="app-shell flex flex-col bg-trust-bg selection:bg-trust-accent/30 selection:text-white">
       <KnowledgeHeader
@@ -231,7 +267,7 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
                 <h1 className="tl-hero-title">Answers you can <em>trace</em> to the record.</h1>
                 <p className="tl-hero-description">Bring in your working documents, ask a precise question, and review the evidence that supports—or limits—the answer.</p>
                 <div className="mt-7 flex flex-wrap gap-3">
-                  <button onClick={() => setIsIngestOpen(true)} className="tl-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold">Add source material <ArrowUpRight className="h-4 w-4" /></button>
+                  <button data-guide-id="add-source" onClick={() => setIsIngestOpen(true)} className="tl-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold">Add source material <ArrowUpRight className="h-4 w-4" /></button>
                   <button onClick={() => setIsArchitectureOpen(true)} className="tl-secondary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold">How it works <Compass className="h-4 w-4 tl-status" /></button>
                 </div>
               </div>
@@ -258,13 +294,13 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
               </div>
             </div>
             <nav aria-label="Workspace pages" className="tl-tab-row border-y border-[var(--tl-line-300)]">
-              {VIEWS.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => navigateView(id)} className={`tl-tab ${activeView === id ? 'is-active' : ''}`}><Icon className="h-3.5 w-3.5" />{label}{id === 'documents' ? ` (${workspaceDocuments.length})` : ''}</button>)}
+              {VIEWS.map(({ id, label, icon: Icon }) => <button key={id} data-guide-id={`nav-${id}`} onClick={() => navigateView(id)} className={`tl-tab ${activeView === id ? 'is-active' : ''}`}><Icon className="h-3.5 w-3.5" />{label}{id === 'documents' ? ` (${workspaceDocuments.length})` : ''}</button>)}
             </nav>
             <div className="mt-4 tl-panel overflow-hidden">
-              {activeView === 'query' && <><QueryConsole onRunQuery={handleRunQuery} isLoading={isQuerying} progressMessage={pipelineStatus} activeWorkspace={activeWorkspace} /><SpecialistCanvas isExecuting={isQuerying} activePlanTrace={queryResult?.plan_trace || []} intent={queryResult?.intent} latencyMs={queryResult?.latency_ms} /><AnswerContractPanel data={queryResult} /></>}
+              {activeView === 'query' && <><QueryConsole onRunQuery={handleRunQuery} isLoading={isQuerying} progressMessage={pipelineStatus} activeWorkspace={activeWorkspace} /><SpecialistCanvas isExecuting={isQuerying} activePlanTrace={queryResult?.plan_trace || []} intent={queryResult?.intent} latencyMs={queryResult?.latency_ms} /><AnswerContractPanel data={queryResult} onFocusGraph={handleFocusGraphClaim} /></>}
               {activeView === 'documents' && <DocumentLibrary documents={workspaceDocuments} activeWorkspace={activeWorkspace} />}
               {activeView === 'health' && <HealthAuditDashboard healthData={healthData} discoveries={discoveries} activeWorkspace={activeWorkspace} />}
-              {activeView === 'graph' && <KnowledgeGraphTimeline entitiesData={entitiesData} timelineData={timelineData} />}
+              {activeView === 'graph' && <KnowledgeMap workspace={activeWorkspace} graph={graphData} graphLoading={graphLoading} graphError={graphError} timelineData={timelineData} entitiesData={entitiesData} focusNodeId={graphFocusNodeId} onFocusHandled={() => setGraphFocusNodeId(null)} onAskNode={handleAskGraphNode} />}
               {activeView === 'rules' && <SemanticRulesManager rules={rules} onAddRule={handleAddRule} activeWorkspace={activeWorkspace} />}
             </div>
           </section>
@@ -274,6 +310,7 @@ function AppContent({ isClerkConfigured = false, clerkUser = null, getToken = nu
       <IngestionModal isOpen={isIngestOpen} onClose={() => setIsIngestOpen(false)} onIngest={handleIngestDocument} activeWorkspace={activeWorkspace} />
       <ArchitectureModal isOpen={isArchitectureOpen} onClose={() => setIsArchitectureOpen(false)} />
       <Footer />
+      <GuideChat context={{ view: activeView, documents: workspaceDocuments.length, hasGraph: graphData.nodes.length > 0 }} onAction={handleGuideAction} />
     </div>
   );
 }

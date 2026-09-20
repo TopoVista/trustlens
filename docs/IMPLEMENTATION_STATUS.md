@@ -9,6 +9,10 @@ The active product path is implemented and connected end to end:
 - The ingestion response includes document ID, authority level, chunk count, and status; the frontend also retains this information in the source register after refresh.
 - Workspace queries return a synthesis contract with claims, evidence, contradictions, unknowns, plan trace, intent, and latency when available.
 - Source register, evidence health, discovery signals, knowledge map, timeline, and verification rules have dedicated frontend views.
+- Knowledge Map now has an interactive Sigma/Graphology intelligence-graph projection with evidence-bearing nodes and edges, filters, focus, node/edge detail panels, contradiction isolation, and explainable path queries.
+- Ingestion persistently projects documents, claims, evidence, entities, events, structured-data variables/values, and computed correlations into `graph_nodes` and `graph_edges` without replacing canonical records.
+- Claim verification now records provider/fallback NLI provenance and adds deterministic numeric and temporal checks plus an interpretable evidence-support score.
+- A local, manifest-constrained in-app guide can spotlight only real safe UI targets; it never receives private document contents or performs destructive actions.
 - Frontend confidence formatting accepts a ratio or percentage contract and safely clamps display to `0-100%`.
 - Production auth verifies Bearer JWTs and enforces workspace ownership. Development mode remains available for local iteration only.
 - Durable persistence is supported through Postgres whenever the running service has `DATABASE_URL`.

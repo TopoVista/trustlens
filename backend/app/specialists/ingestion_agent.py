@@ -8,6 +8,8 @@ from app.specialists.entity_agent import EntityAgent
 from app.specialists.timeline_agent import TimelineAgent
 from app.specialists.data_analyst import DataAnalyst
 from app.knowledge.repository import KnowledgeRepository
+from app.knowledge.graph_builder import GraphBuilder
+from app.specialists.relationship_agent import RelationshipAgent
 
 
 class IngestionKnowledgeAgent(BaseSpecialist):
@@ -105,7 +107,7 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                         row_count=profile_res["row_count"],
                         col_count=profile_res["col_count"],
                         columns=profile_res["headers"],
-                        profile=profile_res["columns_profile"],
+                        profile={**profile_res["columns_profile"], "__correlations__": profile_res.get("correlations", [])},
                         insights=profile_res["insights"]
                     )
                     dataset_profile = profile_res
@@ -154,6 +156,11 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                     timestamp_val=evt["timestamp_val"],
                 )
 
+            # 7. Persist only source-backed entity relationships, then refresh
+            # the generic projection. The canonical tables remain authoritative.
+            relationship_result = RelationshipAgent(self.repo).enrich_document(workspace_id, doc_id)
+            graph_result = GraphBuilder(self.repo).rebuild_workspace(workspace_id)
+
             self.repo.update_document_ingestion_status(workspace_id, doc_id, "READY")
             return {
                 "document_id": doc_id,
@@ -165,6 +172,9 @@ class IngestionKnowledgeAgent(BaseSpecialist):
                 "events_extracted": len(time_res.get("events", [])),
                 "is_tabular": is_tabular,
                 "dataset_profile": dataset_profile,
+                "relationships_extracted": relationship_result["accepted"],
+                "graph_nodes_created": graph_result["nodes_created"],
+                "graph_edges_created": graph_result["edges_created"],
                 "ingestion_status": "READY",
                 "deduplicated": False,
             }

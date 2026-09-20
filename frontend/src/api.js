@@ -117,6 +117,34 @@ export async function getWorkspaceEntities(workspaceId) {
   return res.json();
 }
 
+export async function getWorkspaceGraph(workspaceId, options = {}) {
+  const headers = await buildHeaders();
+  const params = new URLSearchParams();
+  if (options.mode) params.set('mode', options.mode);
+  if (options.minConfidence !== undefined) params.set('min_confidence', String(options.minConfidence));
+  if (options.documentId) params.set('document_id', options.documentId);
+  if (options.limit) params.set('limit', String(options.limit));
+  const suffix = params.toString() ? `?${params}` : '';
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/graph${suffix}`, { headers });
+  if (!res.ok) throw new Error('Failed to fetch workspace graph');
+  return res.json();
+}
+
+export async function getWorkspaceGraphNode(workspaceId, nodeId) {
+  const headers = await buildHeaders();
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/graph/nodes/${encodeURIComponent(nodeId)}`, { headers });
+  if (!res.ok) throw new Error('Failed to fetch graph node details');
+  return res.json();
+}
+
+export async function getWorkspaceGraphPath(workspaceId, source, target) {
+  const headers = await buildHeaders();
+  const params = new URLSearchParams({ source, target });
+  const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/graph/path?${params}`, { headers });
+  if (!res.ok) throw new Error('Failed to find a reasoning path');
+  return res.json();
+}
+
 export async function getWorkspaceTimeline(workspaceId) {
   const headers = await buildHeaders();
   const res = await fetch(`${API_BASE}/api/workspaces/${workspaceId}/timeline`, { headers });

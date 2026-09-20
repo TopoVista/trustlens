@@ -110,6 +110,7 @@ class DataAnalyst(BaseSpecialist):
 
         # Insights Extraction
         insights = []
+        correlations = []
         for col_name, nums in numeric_columns.items():
             mean_val = statistics.mean(nums)
             max_val = max(nums)
@@ -130,6 +131,13 @@ class DataAnalyst(BaseSpecialist):
             if min_len > 2 and len(set(v1[:min_len])) > 1 and len(set(v2[:min_len])) > 1:
                 try:
                     corr = statistics.correlation(v1[:min_len], v2[:min_len])
+                    correlations.append({
+                        "column_a": k1,
+                        "column_b": k2,
+                        "coefficient": round(corr, 3),
+                        "sample_size": min_len,
+                        "method": "pearson",
+                    })
                     insights.append({
                         "type": "CORRELATION",
                         "finding": f"Statistical correlation between '{k1}' and '{k2}' is {round(corr, 3)}.",
@@ -146,6 +154,7 @@ class DataAnalyst(BaseSpecialist):
             "headers": headers,
             "columns_profile": columns_profile,
             "insights": insights,
+            "correlations": correlations,
             "data_quality": {
                 "complete_rows": sum(1 for r in data_rows if all(c.strip() != "" for c in r)),
                 "total_rows": row_count,
